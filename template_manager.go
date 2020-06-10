@@ -32,32 +32,33 @@ func newTemplateManager(excelFilePath string) *TemplateManager {
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) GetTemplate(id int, template interface{}) error {
-	if template == nil {
-		return logger.Dot("template is nil")
+func (manager *TemplateManager) GetTemplate(id int, pTemplate interface{}) bool {
+	if IsNil(pTemplate) {
+		logger.Error("pTemplate is nil")
+		return false
 	}
 
-	var templateValue = reflect.ValueOf(template)
-	if templateValue.Kind() != reflect.Ptr {
-		return logger.Dot("template should be a struct pointer")
+	var pTemplateValue = reflect.ValueOf(pTemplate)
+	if pTemplateValue.Kind() != reflect.Ptr {
+		logger.Error("pTemplate should be a struct pointer")
+		return false
 	}
 
-	var elemType = reflect.Indirect(templateValue).Type()
-	var templateName = elemType.Name()
+	var templateValue = pTemplateValue.Elem()
+	var templateType = templateValue.Type()
+	var templateName = templateType.Name()
 	var table = manager.getTemplateTable(templateName)
 	if table != nil {
-		templateValue.Elem().Set(reflect.ValueOf(table[id]))
-		return nil
+		return checkSetValue(templateValue, table[id])
 	}
 
-	var err = manager.loadTemplateTable(elemType, templateName)
+	var err = manager.loadTemplateTable(templateType, templateName)
 	if err != nil {
-		return err
+		return false
 	}
 
 	table = manager.getTemplateTable(templateName)
-	templateValue.Elem().Set(reflect.ValueOf(table[id]))
-	return nil
+	return checkSetValue(templateValue, table[id])
 }
 
 func (manager *TemplateManager) getTemplateTable(templateName string) TemplateTable {
@@ -69,13 +70,14 @@ func (manager *TemplateManager) getTemplateTable(templateName string) TemplateTa
 	return table.(TemplateTable)
 }
 
-func (manager *TemplateManager) loadTemplateTable(elemType reflect.Type, sheetName string) error {
+func (manager *TemplateManager) loadTemplateTable(templateType reflect.Type, sheetName string) error {
 	return loadOneSheet(manager.excelFilePath, sheetName, func(reader excel.Reader) error {
+		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.tables.Load(sheetName); ok {
 			return nil
 		}
 
-		var pSlice = makeContainer(elemType)
+		var pSlice = makeSlice(templateType)
 		var err = reader.ReadAll(pSlice.Interface())
 		if err != nil {
 			return logger.Dot(err)
@@ -89,7 +91,17 @@ func (manager *TemplateManager) loadTemplateTable(elemType reflect.Type, sheetNa
 	})
 }
 
+func checkSetValue(v reflect.Value, i interface{}) bool {
+	if i != nil {
+		v.Set(reflect.ValueOf(i))
+		return true
+	}
+
+	return false
+}
+
 func loadOneSheet(excelFilePath string, sheetName string, handler func(reader excel.Reader) error) error {
+	// 互斥加载excel文件
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -116,9 +128,11 @@ func loadOneSheet(excelFilePath string, sheetName string, handler func(reader ex
 	return handler(reader)
 }
 
-func makeContainer(elemType reflect.Type) reflect.Value {
+func makeSlice(elemType reflect.Type) reflect.Value {
+	// reflect.SliceOf() --> 我们平时make([]int, 0, 8)的时候，这里传入的也是slice的type，而不是直接传入elemType
 	var slice = reflect.MakeSlice(reflect.SliceOf(elemType), 0, 8)
 	pSlice := reflect.New(slice.Type())
+	// pSlice背后是对象指针，因此需要使用.Elem().Set()设值
 	pSlice.Elem().Set(slice)
 	return pSlice
 }
