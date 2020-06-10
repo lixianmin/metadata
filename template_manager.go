@@ -40,7 +40,7 @@ func (manager *TemplateManager) GetTemplate(id int, pTemplate interface{}) bool 
 
 	var pTemplateValue = reflect.ValueOf(pTemplate)
 	if pTemplateValue.Kind() != reflect.Ptr {
-		logger.Error("pTemplate should be a struct pointer")
+		logger.Error("pTemplate should be of type *Template")
 		return false
 	}
 
@@ -54,11 +54,48 @@ func (manager *TemplateManager) GetTemplate(id int, pTemplate interface{}) bool 
 
 	var err = manager.loadTemplateTable(templateType, templateName)
 	if err != nil {
+		manager.tables.Store(templateName, make(TemplateTable))
 		return false
 	}
 
 	table = manager.getTemplateTable(templateName)
 	return checkSetValue(templateValue, table[id])
+}
+
+func (manager *TemplateManager) GetTemplates(pTemplateList interface{}) bool {
+	var pTemplateListValue = reflect.ValueOf(pTemplateList)
+	if pTemplateListValue.Kind() != reflect.Ptr {
+		logger.Error("pTemplateList should be a pointer")
+		return false
+	}
+
+	var templateListValue = pTemplateListValue.Elem()
+	if templateListValue.Kind() != reflect.Slice {
+		logger.Error("pTemplateList should be a pointer of slice")
+		return false
+	}
+
+	// 取得元素类型
+	var elemType = templateListValue.Type().Elem()
+	var templateName = elemType.Name()
+	var table = manager.getTemplateTable(templateName)
+	if table != nil {
+		var hasData = len(table) > 0
+		if hasData {
+			fillSliceByTable(pTemplateListValue, elemType, table)
+		}
+		return hasData
+	}
+
+	var err = manager.loadTemplateTable(elemType, templateName)
+	if err != nil {
+		manager.tables.Store(templateName, make(TemplateTable))
+		return false
+	}
+
+	table = manager.getTemplateTable(templateName)
+	fillSliceByTable(pTemplateListValue, elemType, table)
+	return true
 }
 
 func (manager *TemplateManager) getTemplateTable(templateName string) TemplateTable {
@@ -89,6 +126,15 @@ func (manager *TemplateManager) loadTemplateTable(templateType reflect.Type, she
 		manager.tables.Store(sheetName, table)
 		return nil
 	})
+}
+
+func fillSliceByTable(pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
+	var slice = reflect.MakeSlice(reflect.SliceOf(elemType), 0, len(table))
+	for _, item := range table {
+		slice = reflect.Append(slice, reflect.ValueOf(item))
+	}
+
+	pTemplateListValue.Elem().Set(slice)
 }
 
 func checkSetValue(v reflect.Value, i interface{}) bool {

@@ -20,6 +20,10 @@ func Init(log logger.ILogger, excelFilePath string) {
 	templateManager = newTemplateManager(excelFilePath)
 }
 
-func GetTemplate(id int, template interface{}) bool {
-	return templateManager.GetTemplate(id, template)
+func GetTemplate(id int, pTemplate interface{}) bool {
+	return templateManager.GetTemplate(id, pTemplate)
+}
+
+func GetTemplates(pTemplateList interface{}) bool {
+	return templateManager.GetTemplates(pTemplateList)
 }

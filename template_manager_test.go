@@ -33,6 +33,11 @@ type TestTemplate struct {
 	Person  *TestPerson `xlsx:"person"`              // 通过实现UnmarshalBinary接口，可以支持嵌入json字符串；但这里加default({\"Name\":\"Panda\", \"Age\":18}) 之后好像就报错了
 }
 
+type FakeTemplate struct {
+	ID   int
+	Name string `xlsx:"name"`
+}
+
 func TestTemplateManager_GetTemplate(t *testing.T) {
 	Init(nil, testExcelFilePath)
 
@@ -42,4 +47,20 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 	assert.False(t, GetTemplate(100, &template))
 	assert.False(t, GetTemplate(100, nil))
 	assert.False(t, GetTemplate(100, TestTemplate{}))
+
+	var fake FakeTemplate
+	assert.False(t, GetTemplate(1, &fake))
+	assert.False(t, GetTemplate(2, &fake))
+}
+
+func TestTemplateManager_GetTemplates(t *testing.T) {
+	Init(nil, testExcelFilePath)
+
+	var templates []TestTemplate
+	assert.True(t, GetTemplates(&templates))
+	assert.True(t, GetTemplates(&templates))
+
+	var fakes []FakeTemplate
+	assert.False(t, GetTemplates(&fakes))
+	assert.False(t, GetTemplates(&fakes))
 }
