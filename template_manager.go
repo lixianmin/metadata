@@ -199,7 +199,13 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 		}
 
 		var id = int(fieldId.Int())
-		table[id] = item.Interface()
+		var newItem = item.Interface()
+		var oldItem, ok = table[id]
+		if ok {
+			logger.Error("Found duplicate templates: id=%d, oldItem=%v, newItem=%v", id, oldItem, newItem)
+		}
+
+		table[id] = newItem
 	}
 
 	return table
