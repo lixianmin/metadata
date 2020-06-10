@@ -1,6 +1,9 @@
 package metadata
 
-import "sync"
+import (
+	"github.com/lixianmin/metadata/logger"
+	"sync"
+)
 
 /********************************************************************
 created:    2020-06-08
@@ -12,7 +15,8 @@ Copyright (C) - All Rights Reserved
 var templateManager *TemplateManager
 var lock sync.Mutex
 
-func Init(excelFilePath string) {
+func Init(log logger.ILogger, excelFilePath string) {
+	logger.Init(log)
 	templateManager = newTemplateManager(excelFilePath)
 }
 

@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"github.com/lixianmin/tour-server/core/logger"
+	"github.com/lixianmin/metadata/logger"
 	"github.com/szyhf/go-excel"
 	"reflect"
 	"sync"
