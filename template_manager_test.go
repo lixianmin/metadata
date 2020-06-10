@@ -13,8 +13,6 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-const testExcelFilePath = "res/metadata.xlsx"
-
 type TestPerson struct {
 	Name string
 	Age  int

@@ -19,13 +19,11 @@ type TemplateTable map[int]interface{}
 type TemplateManager struct {
 	excelFilePath string
 	tables        sync.Map
-	m             sync.RWMutex
 }
 
 func newTemplateManager(excelFilePath string) *TemplateManager {
 	var manager = &TemplateManager{
 		excelFilePath: excelFilePath,
-		tables:        sync.Map{},
 	}
 
 	return manager

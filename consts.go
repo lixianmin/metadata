@@ -7,3 +7,4 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
+const testExcelFilePath = "res/metadata.xlsx"
