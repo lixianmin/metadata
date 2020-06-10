@@ -7,6 +7,3 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-const (
-	idFieldName = "ID"
-)

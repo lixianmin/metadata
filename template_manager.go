@@ -143,8 +143,14 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 
 	for i := 0; i < count; i++ {
 		var item = slice.Index(i)
-		var fieldId = item.FieldByName(idFieldName)
+
+		// Id 或 ID 都是可以接受的，但必须有
+		var fieldId = item.FieldByNameFunc(func(s string) bool {
+			return s == "Id" || s == "ID" || s == "id"
+		})
+
 		if !fieldId.IsValid() {
+			logger.Error("You must define an \"Id\" field in template struct.")
 			continue
 		}
 
