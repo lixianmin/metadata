@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"github.com/lixianmin/metadata/logger"
+	"strings"
 	"sync"
 )
 
@@ -18,8 +19,18 @@ var lock sync.Mutex
 
 func Init(log logger.ILogger, excelFilePath string) {
 	logger.Init(log)
-	templateManager = newTemplateManager(excelFilePath)
-	configManager = newConfigManager(excelFilePath)
+
+	var isUrl = strings.HasPrefix(excelFilePath, "http://") || strings.HasPrefix(excelFilePath, "http://")
+	if isUrl {
+		var web = NewWebFile(excelFilePath)
+		web.Start(func(filepath string) {
+			templateManager = newTemplateManager(filepath)
+			configManager = newConfigManager(filepath)
+		})
+	} else {
+		templateManager = newTemplateManager(excelFilePath)
+		configManager = newConfigManager(excelFilePath)
+	}
 }
 
 func GetTemplate(id int, pTemplate interface{}) bool {

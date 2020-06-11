@@ -6,9 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
 /********************************************************************
@@ -19,24 +17,27 @@ Copyright (C) - All Rights Reserved
 *********************************************************************/
 
 type WebFile struct {
-	url          string
-	lastETag     string
-	lastDate     string
-	tempFilePath unsafe.Pointer
+	url      string
+	lastETag string
+	lastDate string
 }
 
 func NewWebFile(url string) *WebFile {
 	var web = &WebFile{url: url}
-	go web.goLoop()
-
 	return web
 }
 
-func (web *WebFile) goLoop() {
-	for {
-		_ = web.checkDownload()
-		time.Sleep(time.Minute)
+func (web *WebFile) Start(onFileChanged func(filepath string)) {
+	if onFileChanged == nil {
+		panic("onFileChanged should not be nil")
 	}
+
+	go func() {
+		for {
+			_ = web.checkDownload(onFileChanged)
+			time.Sleep(time.Minute)
+		}
+	}()
 }
 
 func (web *WebFile) buildRequest() (*http.Request, error) {
@@ -50,7 +51,13 @@ func (web *WebFile) buildRequest() (*http.Request, error) {
 	return req, err
 }
 
-func (web *WebFile) checkDownload() error {
+func (web *WebFile) checkDownload(onFileChanged func(filepath string)) error {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error(r)
+		}
+	}()
+
 	var request, err = web.buildRequest()
 	if err != nil {
 		return logger.Dot(err)
@@ -91,16 +98,10 @@ func (web *WebFile) checkDownload() error {
 		return logger.Dot(err)
 	}
 
-	web.setTempFilePath(tmpFile.Name())
 	web.lastETag = response.Header.Get("Etag")
 	web.lastDate = response.Header.Get("Date")
+
+	var filepath = tmpFile.Name()
+	onFileChanged(filepath)
 	return nil
-}
-
-func (web *WebFile) GetTempFilePath() string {
-	return *(*string)(atomic.LoadPointer(&web.tempFilePath))
-}
-
-func (web *WebFile) setTempFilePath(filepath string) {
-	atomic.StorePointer(&web.tempFilePath, unsafe.Pointer(&filepath))
 }
