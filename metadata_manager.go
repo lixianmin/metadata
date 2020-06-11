@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"github.com/lixianmin/metadata/logger"
-	"github.com/szyhf/go-excel"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -36,23 +35,10 @@ func (my *MetadataManager) AddExcel(remotePath string) {
 	}
 }
 
-func (my *MetadataManager) onAddNewExcel(excelFilePath string) {
-	// 互斥加载excel文件
-	lock.Lock()
-	defer lock.Unlock()
-
-	conn := excel.NewConnecter()
-	err := conn.Open(excelFilePath)
-	if err != nil {
-		logger.Error(err)
-		return
-	}
-
-	defer conn.Close()
-
-	var sheetNames = conn.GetSheetNames()
+func (my *MetadataManager) onAddNewExcel(localPath string) {
+	var sheetNames = loadSheetNames(localPath)
 	for _, name := range sheetNames {
-		my.routeTable.Store(name, excelFilePath)
+		my.routeTable.Store(name, localPath)
 	}
 
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(&TemplateManager{}))

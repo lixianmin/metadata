@@ -3,6 +3,7 @@ package metadata
 import (
 	"github.com/lixianmin/metadata/logger"
 	"github.com/szyhf/go-excel"
+	"sync"
 )
 
 /********************************************************************
@@ -12,10 +13,29 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
+// 互斥加载excel文件
+var excelLock sync.Mutex
+
+func loadSheetNames(excelFilePath string) []string {
+	excelLock.Lock()
+	defer excelLock.Unlock()
+
+	conn := excel.NewConnecter()
+	err := conn.Open(excelFilePath)
+	if err != nil {
+		logger.Error(err)
+		return nil
+	}
+
+	defer conn.Close()
+
+	var sheetNames = conn.GetSheetNames()
+	return sheetNames
+}
+
 func loadOneSheet(excelFilePath string, sheetName string, handler func(reader excel.Reader) error) error {
-	// 互斥加载excel文件
-	lock.Lock()
-	defer lock.Unlock()
+	excelLock.Lock()
+	defer excelLock.Unlock()
 
 	conn := excel.NewConnecter()
 	err := conn.Open(excelFilePath)

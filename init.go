@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"github.com/lixianmin/metadata/logger"
-	"sync"
 )
 
 /********************************************************************
@@ -13,7 +12,6 @@ Copyright (C) - All Rights Reserved
 *********************************************************************/
 
 var metadataManager = &MetadataManager{}
-var lock sync.Mutex
 
 func Init(log logger.ILogger) {
 	logger.Init(log)
