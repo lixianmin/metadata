@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var testWebFileUrl = "https://dbp-media.bj.bcebos.com/0123456789/metadata.xlsx"
+var testWebFileUrl = "https://github.com/lixianmin/metadata/raw/master/res/metadata.xlsx"
 
 func TestNewWebFile(t *testing.T) {
 	Init(nil, testWebFileUrl)
