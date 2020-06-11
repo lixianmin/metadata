@@ -37,16 +37,18 @@ func Error(first interface{}, args ...interface{}) {
 }
 
 func Dot(err interface{}) error {
-	switch err := err.(type) {
-	case string:
-		var v = errors.New(err)
-		theLogger.Error(v)
-		return v
-	case error:
-		if err != nil && err != sql.ErrTxDone && err != sql.ErrNoRows {
-			theLogger.Error("err=%q", err)
+	if err != nil {
+		switch err := err.(type) {
+		case string:
+			var v = errors.New(err)
+			theLogger.Error(v)
+			return v
+		case error:
+			if err != nil && err != sql.ErrTxDone && err != sql.ErrNoRows {
+				theLogger.Error("err=%q", err)
+			}
+			return err
 		}
-		return err
 	}
 
 	return nil
