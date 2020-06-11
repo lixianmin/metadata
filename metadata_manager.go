@@ -18,7 +18,8 @@ Copyright (C) - All Rights Reserved
 type MetadataManager struct {
 	templateManager unsafe.Pointer
 	configManager   unsafe.Pointer
-	routeTable      sync.Map
+	excelCount      int32    // 成功加载的excel文件个数，用于判断初始化完成
+	routeTable      sync.Map // 路由表，sheetName => excelFilePath
 }
 
 func (my *MetadataManager) AddExcel(remotePath string) {
@@ -43,6 +44,7 @@ func (my *MetadataManager) onAddNewExcel(localPath string) {
 
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(&TemplateManager{}))
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(&ConfigManager{}))
+	atomic.AddInt32(&my.excelCount, 1)
 }
 
 func (my *MetadataManager) GetTemplate(id int, pTemplate interface{}) bool {
@@ -58,4 +60,9 @@ func (my *MetadataManager) GetTemplates(pTemplateList interface{}) bool {
 func (my *MetadataManager) GetConfig(pConfig interface{}) bool {
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
 	return manager != nil && manager.GetConfig(&my.routeTable, pConfig)
+}
+
+func (my *MetadataManager) GetExcelCount() int {
+	var count = atomic.LoadInt32(&my.excelCount)
+	return int(count)
 }
