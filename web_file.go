@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync/atomic"
 	"time"
+	"unsafe"
 )
 
 /********************************************************************
@@ -20,7 +22,7 @@ type WebFile struct {
 	url          string
 	lastETag     string
 	lastDate     string
-	tempFilePath string
+	tempFilePath unsafe.Pointer
 }
 
 func NewWebFile(url string) *WebFile {
@@ -89,12 +91,16 @@ func (web *WebFile) checkDownload() error {
 		return logger.Dot(err)
 	}
 
-	web.tempFilePath = tmpFile.Name()
+	web.setTempFilePath(tmpFile.Name())
 	web.lastETag = response.Header.Get("Etag")
 	web.lastDate = response.Header.Get("Date")
 	return nil
 }
 
 func (web *WebFile) GetTempFilePath() string {
-	return web.tempFilePath
+	return *(*string)(atomic.LoadPointer(&web.tempFilePath))
+}
+
+func (web *WebFile) setTempFilePath(filepath string) {
+	atomic.StorePointer(&web.tempFilePath, unsafe.Pointer(&filepath))
 }
