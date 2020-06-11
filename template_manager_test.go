@@ -37,9 +37,11 @@ type FakeTemplate struct {
 }
 
 func TestTemplateManager_GetTemplate(t *testing.T) {
+	var template TestTemplate
+	assert.False(t, GetTemplate(1, &template))
+
 	Init(nil, testExcelFilePath)
 
-	var template TestTemplate
 	assert.True(t, GetTemplate(1, &template))
 	assert.True(t, GetTemplate(2, &template))
 	assert.False(t, GetTemplate(100, &template))

@@ -4,6 +4,8 @@ import (
 	"github.com/lixianmin/metadata/logger"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"unsafe"
 )
 
 /********************************************************************
@@ -13,34 +15,37 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-var templateManager *TemplateManager
-var configManager *ConfigManager
+var templateManager unsafe.Pointer
+var configManager unsafe.Pointer
 var lock sync.Mutex
 
 func Init(log logger.ILogger, excelFilePath string) {
 	logger.Init(log)
 
-	var isUrl = strings.HasPrefix(excelFilePath, "http://") || strings.HasPrefix(excelFilePath, "http://")
+	var isUrl = strings.HasPrefix(excelFilePath, "http://") || strings.HasPrefix(excelFilePath, "https://")
 	if isUrl {
 		var web = NewWebFile(excelFilePath)
 		web.Start(func(filepath string) {
-			templateManager = newTemplateManager(filepath)
-			configManager = newConfigManager(filepath)
+			atomic.StorePointer(&templateManager, unsafe.Pointer(newTemplateManager(filepath)))
+			atomic.StorePointer(&configManager, unsafe.Pointer(newConfigManager(filepath)))
 		})
 	} else {
-		templateManager = newTemplateManager(excelFilePath)
-		configManager = newConfigManager(excelFilePath)
+		atomic.StorePointer(&templateManager, unsafe.Pointer(newTemplateManager(excelFilePath)))
+		atomic.StorePointer(&configManager, unsafe.Pointer(newConfigManager(excelFilePath)))
 	}
 }
 
 func GetTemplate(id int, pTemplate interface{}) bool {
-	return templateManager != nil && templateManager.GetTemplate(id, pTemplate)
+	var manager = (*TemplateManager)(atomic.LoadPointer(&templateManager))
+	return manager != nil && manager.GetTemplate(id, pTemplate)
 }
 
 func GetTemplates(pTemplateList interface{}) bool {
-	return templateManager != nil && templateManager.GetTemplates(pTemplateList)
+	var manager = (*TemplateManager)(atomic.LoadPointer(&templateManager))
+	return manager != nil && manager.GetTemplates(pTemplateList)
 }
 
 func GetConfig(pConfig interface{}) bool {
-	return configManager != nil && configManager.GetConfig(pConfig)
+	var manager = (*ConfigManager)(atomic.LoadPointer(&configManager))
+	return manager != nil && manager.GetConfig(pConfig)
 }
