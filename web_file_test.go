@@ -7,11 +7,12 @@ import (
 )
 
 func TestNewWebFile(t *testing.T) {
-	Init(nil, testWebFileUrl)
+	var manager = &MetadataManager{}
+	manager.AddExcel(testWebFileUrl)
 
 	var template TestTemplate
 	for i := 0; i < 8; i++ {
-		GetTemplate(1, &template)
+		manager.GetTemplate(1, &template)
 		logger.Info("template=%v", template)
 
 		time.Sleep(30 * time.Second)

@@ -37,30 +37,33 @@ type FakeTemplate struct {
 }
 
 func TestTemplateManager_GetTemplate(t *testing.T) {
+	var manager = &MetadataManager{}
+
 	var template TestTemplate
-	assert.False(t, GetTemplate(1, &template))
+	assert.False(t, manager.GetTemplate(1, &template))
 
-	Init(nil, testExcelFilePath)
+	manager.AddExcel(testExcelFilePath)
 
-	assert.True(t, GetTemplate(1, &template))
-	assert.True(t, GetTemplate(2, &template))
-	assert.False(t, GetTemplate(100, &template))
-	assert.False(t, GetTemplate(100, nil))
-	assert.False(t, GetTemplate(100, TestTemplate{}))
+	assert.True(t, manager.GetTemplate(1, &template))
+	assert.True(t, manager.GetTemplate(2, &template))
+	assert.False(t, manager.GetTemplate(100, &template))
+	assert.False(t, manager.GetTemplate(100, nil))
+	assert.False(t, manager.GetTemplate(100, TestTemplate{}))
 
 	var fake FakeTemplate
-	assert.False(t, GetTemplate(1, &fake))
-	assert.False(t, GetTemplate(2, &fake))
+	assert.False(t, manager.GetTemplate(1, &fake))
+	assert.False(t, manager.GetTemplate(2, &fake))
 }
 
 func TestTemplateManager_GetTemplates(t *testing.T) {
-	Init(nil, testExcelFilePath)
+	var manager = &MetadataManager{}
+	manager.AddExcel(testExcelFilePath)
 
 	var templates []TestTemplate
-	assert.True(t, GetTemplates(&templates))
-	assert.True(t, GetTemplates(&templates))
+	assert.True(t, manager.GetTemplates(&templates))
+	assert.True(t, manager.GetTemplates(&templates))
 
 	var fakes []FakeTemplate
-	assert.False(t, GetTemplates(&fakes))
-	assert.False(t, GetTemplates(&fakes))
+	assert.False(t, manager.GetTemplates(&fakes))
+	assert.False(t, manager.GetTemplates(&fakes))
 }

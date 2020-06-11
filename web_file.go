@@ -27,7 +27,7 @@ func NewWebFile(url string) *WebFile {
 	return web
 }
 
-func (web *WebFile) Start(onFileChanged func(filepath string)) {
+func (web *WebFile) Start(onFileChanged func(localPath string)) {
 	if onFileChanged == nil {
 		panic("onFileChanged should not be nil")
 	}

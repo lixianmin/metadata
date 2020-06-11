@@ -17,20 +17,11 @@ Copyright (C) - All Rights Reserved
 type TemplateTable map[int]interface{}
 
 type TemplateManager struct {
-	excelFilePath string
-	tables        sync.Map
-}
-
-func newTemplateManager(excelFilePath string) *TemplateManager {
-	var manager = &TemplateManager{
-		excelFilePath: excelFilePath,
-	}
-
-	return manager
+	tables sync.Map
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) GetTemplate(id int, pTemplate interface{}) bool {
+func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id int, pTemplate interface{}) bool {
 	if IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
@@ -50,7 +41,13 @@ func (manager *TemplateManager) GetTemplate(id int, pTemplate interface{}) bool 
 		return checkSetValue(templateValue, table[id])
 	}
 
-	var err = manager.loadTemplateTable(templateType, templateName)
+	excelFilePath, ok := routeTable.Load(templateName)
+	if !ok {
+		logger.Error("Can not find excelFilePath for templateName=%q", templateName)
+		return false
+	}
+
+	var err = manager.loadTemplateTable(excelFilePath.(string), templateType, templateName)
 	if err != nil {
 		manager.tables.Store(templateName, make(TemplateTable))
 		return false
@@ -60,7 +57,7 @@ func (manager *TemplateManager) GetTemplate(id int, pTemplate interface{}) bool 
 	return checkSetValue(templateValue, table[id])
 }
 
-func (manager *TemplateManager) GetTemplates(pTemplateList interface{}) bool {
+func (manager *TemplateManager) GetTemplates(routeTable *sync.Map, pTemplateList interface{}) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -85,7 +82,13 @@ func (manager *TemplateManager) GetTemplates(pTemplateList interface{}) bool {
 		return hasData
 	}
 
-	var err = manager.loadTemplateTable(elemType, templateName)
+	excelFilePath, ok := routeTable.Load(templateName)
+	if !ok {
+		logger.Error("Can not find excelFilePath for templateName=%q", templateName)
+		return false
+	}
+
+	var err = manager.loadTemplateTable(excelFilePath.(string), elemType, templateName)
 	if err != nil {
 		manager.tables.Store(templateName, make(TemplateTable))
 		return false
@@ -105,8 +108,8 @@ func (manager *TemplateManager) getTemplateTable(templateName string) TemplateTa
 	return table.(TemplateTable)
 }
 
-func (manager *TemplateManager) loadTemplateTable(templateType reflect.Type, sheetName string) error {
-	return loadOneSheet(manager.excelFilePath, sheetName, func(reader excel.Reader) error {
+func (manager *TemplateManager) loadTemplateTable(excelFilePath string, templateType reflect.Type, sheetName string) error {
+	return loadOneSheet(excelFilePath, sheetName, func(reader excel.Reader) error {
 		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.tables.Load(sheetName); ok {
 			return nil
@@ -142,34 +145,6 @@ func checkSetValue(v reflect.Value, i interface{}) bool {
 	}
 
 	return false
-}
-
-func loadOneSheet(excelFilePath string, sheetName string, handler func(reader excel.Reader) error) error {
-	// 互斥加载excel文件
-	lock.Lock()
-	defer lock.Unlock()
-
-	conn := excel.NewConnecter()
-	err := conn.Open(excelFilePath)
-	if err != nil {
-		return logger.Dot(err)
-	}
-
-	defer conn.Close()
-
-	// Generate an new reader of a sheet
-	// sheetNamer: if sheetNamer is string, will use sheet as sheet sheetName.
-	//             if sheetNamer is int, will i'th sheet in the workbook, be careful the hidden sheet is counted. i ∈ [1,+inf]
-	//             if sheetNamer is a object implements `GetXLSXSheetName()string`, the return value will be used.
-	//             otherwise, will use sheetNamer as struct and reflect for it's sheetName.
-	// 			   if sheetNamer is a slice, the type of element will be used to infer like before.
-	reader, err := conn.NewReader(sheetName)
-	if err != nil {
-		return logger.Dot(err)
-	}
-	defer reader.Close()
-
-	return handler(reader)
 }
 
 func makeSlice(elemType reflect.Type) reflect.Value {

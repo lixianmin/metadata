@@ -23,13 +23,14 @@ type FakeConfig struct {
 }
 
 func TestConfigManager_GetConfig(t *testing.T) {
-	Init(nil, testExcelFilePath)
+	var manager = &MetadataManager{}
+	manager.AddExcel(testExcelFilePath)
 
 	var config TestConfig
-	assert.True(t, GetConfig(&config))
-	assert.True(t, GetConfig(&config))
+	assert.True(t, manager.GetConfig(&config))
+	assert.True(t, manager.GetConfig(&config))
 
 	var fake FakeConfig
-	assert.False(t, GetConfig(&fake))
-	assert.False(t, GetConfig(&fake))
+	assert.False(t, manager.GetConfig(&fake))
+	assert.False(t, manager.GetConfig(&fake))
 }
