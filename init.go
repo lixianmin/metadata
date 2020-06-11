@@ -26,10 +26,12 @@ func Init(log logger.ILogger, excelFilePath string) {
 	if isUrl {
 		var web = NewWebFile(excelFilePath)
 		web.Start(func(filepath string) {
+			logger.Warn("Metadata file is changed, excelFilePath=%q, filepath=%q", excelFilePath, filepath)
 			atomic.StorePointer(&templateManager, unsafe.Pointer(newTemplateManager(filepath)))
 			atomic.StorePointer(&configManager, unsafe.Pointer(newConfigManager(filepath)))
 		})
 	} else {
+		logger.Warn("Metadata file is changed, excelFilePath=%q", excelFilePath)
 		atomic.StorePointer(&templateManager, unsafe.Pointer(newTemplateManager(excelFilePath)))
 		atomic.StorePointer(&configManager, unsafe.Pointer(newConfigManager(excelFilePath)))
 	}
