@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/metadata/tools"
 	"github.com/szyhf/go-excel"
 	"reflect"
 	"sync"
@@ -22,7 +23,7 @@ type TemplateManager struct {
 
 // template是一个结构体指针
 func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id interface{}, pTemplate interface{}) bool {
-	if IsNil(pTemplate) {
+	if tools.IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
 	}

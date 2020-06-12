@@ -3,6 +3,7 @@ package metadata
 import (
 	"fmt"
 	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/metadata/tools"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -72,6 +73,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 		return logger.Dot(err)
 	}
 
+	// 如果未修改，则直接返回
 	var notModified = response.StatusCode == http.StatusNotModified
 	if notModified {
 		return nil
@@ -109,7 +111,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 }
 
 func (web *WebFile) createTempFile() (*os.File, error) {
-	var err = EnsureDir(downloadDirectory)
+	var err = tools.EnsureDir(downloadDirectory)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/metadata/tools"
 	"github.com/szyhf/go-excel"
 	"reflect"
 	"sync"
@@ -19,7 +20,7 @@ type ConfigManager struct {
 }
 
 func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}) bool {
-	if IsNil(pConfig) {
+	if tools.IsNil(pConfig) {
 		logger.Error("pConfig is nil")
 		return false
 	}
