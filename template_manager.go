@@ -14,14 +14,14 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-type TemplateTable map[int]interface{}
+type TemplateTable map[interface{}]interface{}
 
 type TemplateManager struct {
 	tables sync.Map
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id int, pTemplate interface{}) bool {
+func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id interface{}, pTemplate interface{}) bool {
 	if IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
@@ -173,7 +173,7 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 			continue
 		}
 
-		var id = int(fieldId.Int())
+		var id = fieldId.Interface()
 		var newItem = item.Interface()
 		var oldItem, ok = table[id]
 		if ok {

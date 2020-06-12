@@ -21,7 +21,7 @@ func AddExcel(remotePath string) {
 	metadataManager.AddExcel(remotePath)
 }
 
-func GetTemplate(id int, pTemplate interface{}) bool {
+func GetTemplate(id interface{}, pTemplate interface{}) bool {
 	return metadataManager.GetTemplate(id, pTemplate)
 }
 

@@ -47,7 +47,7 @@ func (my *MetadataManager) onAddNewExcel(localPath string) {
 	atomic.AddInt32(&my.excelCount, 1)
 }
 
-func (my *MetadataManager) GetTemplate(id int, pTemplate interface{}) bool {
+func (my *MetadataManager) GetTemplate(id interface{}, pTemplate interface{}) bool {
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
 	return manager != nil && manager.GetTemplate(&my.routeTable, id, pTemplate)
 }
