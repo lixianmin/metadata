@@ -33,7 +33,7 @@ type TestTemplate struct {
 
 func main() {
   var url = "xxxx"
-  metadata.Init(nil, url)
+  metadata.AddExcel(url)
   
   .....
   var template TestTemplate

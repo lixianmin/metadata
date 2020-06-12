@@ -36,13 +36,20 @@ type FakeTemplate struct {
 	Name string `xlsx:"name"`
 }
 
+type AnotherTemplate struct {
+	Id   int    `xlsx:"id"`
+	Name string `xlsx:"名称"` // 支持中文的列名
+}
+
 func TestTemplateManager_GetTemplate(t *testing.T) {
 	var manager = &MetadataManager{}
 
 	var template TestTemplate
 	assert.False(t, manager.GetTemplate(1, &template))
 
+	// 可以同时添加多个excel文件
 	manager.AddExcel(testExcelFilePath)
+	manager.AddExcel(testExcelFilePath2)
 
 	assert.True(t, manager.GetTemplate(1, &template))
 	assert.True(t, manager.GetTemplate(2, &template))
