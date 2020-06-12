@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"github.com/lixianmin/metadata/logger"
+	"os"
 )
 
 /********************************************************************
@@ -15,6 +16,9 @@ var metadataManager = &MetadataManager{}
 
 func Init(log logger.ILogger) {
 	logger.Init(log)
+
+	// 每次项目启动时，删除旧的下载文件
+	_ = os.RemoveAll(downloadDirectory)
 }
 
 func AddExcel(remotePath string) {

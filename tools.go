@@ -1,6 +1,9 @@
 package metadata
 
-import "reflect"
+import (
+	"os"
+	"reflect"
+)
 
 /********************************************************************
 created:    2020-06-08
@@ -20,4 +23,13 @@ func IsNil(i interface{}) bool {
 	}
 
 	return false
+}
+
+func EnsureDir(dirname string) error {
+	if _, err := os.Stat(dirname); err != nil {
+		err = os.MkdirAll(dirname, os.ModePerm)
+		return err
+	}
+
+	return nil
 }

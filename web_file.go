@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/lixianmin/metadata/logger"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -52,7 +54,7 @@ func (web *WebFile) buildRequest() (*http.Request, error) {
 	return req, err
 }
 
-func (web *WebFile) checkDownload(onFileChanged func(filepath string)) error {
+func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Error(r)
@@ -81,8 +83,7 @@ func (web *WebFile) checkDownload(onFileChanged func(filepath string)) error {
 		return logger.Dot(text)
 	}
 
-	// todo tmpFile需要由程序负责删除
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "metadata-")
+	tmpFile, err := web.createTempFile()
 	if err != nil {
 		return logger.Dot(err)
 	}
@@ -105,4 +106,18 @@ func (web *WebFile) checkDownload(onFileChanged func(filepath string)) error {
 	var filepath = tmpFile.Name()
 	onFileChanged(filepath)
 	return nil
+}
+
+func (web *WebFile) createTempFile() (*os.File, error) {
+	var err = EnsureDir(downloadDirectory)
+	if err != nil {
+		return nil, err
+	}
+
+	var now = time.Now().Format("2006-01-02T15:04:05")
+	var filename = fmt.Sprintf("%d.%s.%d.xlsx", os.Getpid(), now, rand.Int31n(1029))
+
+	var localPath = filepath.Join(downloadDirectory, filename)
+	tmpFile, err := os.Create(localPath)
+	return tmpFile, err
 }
