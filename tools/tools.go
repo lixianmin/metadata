@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"os"
 	"reflect"
 )
 
@@ -23,13 +22,4 @@ func IsNil(i interface{}) bool {
 	}
 
 	return false
-}
-
-func EnsureDir(dirname string) error {
-	if _, err := os.Stat(dirname); err != nil {
-		err = os.MkdirAll(dirname, os.ModePerm)
-		return err
-	}
-
-	return nil
 }
