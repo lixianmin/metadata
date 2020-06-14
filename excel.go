@@ -33,12 +33,12 @@ func loadSheetNames(excelFilePath string) []string {
 	return sheetNames
 }
 
-func loadOneSheet(excelFilePath string, sheetName string, handler func(reader excel.Reader) error) error {
+func loadOneSheet(args ExcelArgs, sheetName string, handler func(reader excel.Reader) error) error {
 	excelLock.Lock()
 	defer excelLock.Unlock()
 
 	conn := excel.NewConnecter()
-	err := conn.Open(excelFilePath)
+	err := conn.Open(args.FilePath)
 	if err != nil {
 		return logger.Dot(err)
 	}
@@ -51,7 +51,12 @@ func loadOneSheet(excelFilePath string, sheetName string, handler func(reader ex
 	//             if sheetNamer is a object implements `GetXLSXSheetName()string`, the return value will be used.
 	//             otherwise, will use sheetNamer as struct and reflect for it's sheetName.
 	// 			   if sheetNamer is a slice, the type of element will be used to infer like before.
-	reader, err := conn.NewReader(sheetName)
+	reader, err := conn.NewReaderByConfig(&excel.Config{
+		Sheet:         sheetName,
+		TitleRowIndex: args.TitleRowIndex,
+		Skip:          args.Skip,
+	})
+	
 	if err != nil {
 		return logger.Dot(err)
 	}

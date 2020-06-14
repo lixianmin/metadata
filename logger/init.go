@@ -3,6 +3,7 @@ package logger
 import (
 	"database/sql"
 	"errors"
+	"github.com/lixianmin/logo"
 )
 
 /********************************************************************
@@ -12,15 +13,15 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
  *********************************************************************/
 
-var theLogger ILogger = &ConsoleLogger{}
+var theLogger logo.ILogger = logo.GetLogger()
 
-func Init(log ILogger) {
+func Init(log logo.ILogger) {
 	if log != nil {
 		theLogger = log
 	}
 }
 
-func GetDefaultLogger() ILogger {
+func GetLogger() logo.ILogger {
 	return theLogger
 }
 

@@ -19,6 +19,14 @@ type ConfigManager struct {
 	configs sync.Map
 }
 
+func newConfigManager() *ConfigManager {
+	var manager = &ConfigManager{
+
+	}
+
+	return manager
+}
+
 func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}) bool {
 	if tools.IsNil(pConfig) {
 		logger.Error("pConfig is nil")
@@ -39,13 +47,13 @@ func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{
 		return checkSetValue(configValue, config)
 	}
 
-	excelFilePath, ok := routeTable.Load(configName)
+	args, ok := routeTable.Load(configName)
 	if !ok {
 		logger.Error("Can not find excelFilePath for configName=%q", configName)
 		return false
 	}
 
-	var err = manager.loadConfig(excelFilePath.(string), configType, configName)
+	var err = manager.loadConfig(args.(ExcelArgs), configType, configName)
 	if err != nil {
 		manager.configs.Store(configName, nil)
 		return false
@@ -55,8 +63,8 @@ func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{
 	return checkSetValue(configValue, config)
 }
 
-func (manager *ConfigManager) loadConfig(excelFilePath string, configType reflect.Type, sheetName string) error {
-	return loadOneSheet(excelFilePath, sheetName, func(reader excel.Reader) error {
+func (manager *ConfigManager) loadConfig(args ExcelArgs, configType reflect.Type, sheetName string) error {
+	return loadOneSheet(args, sheetName, func(reader excel.Reader) error {
 		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.configs.Load(sheetName); ok {
 			return nil

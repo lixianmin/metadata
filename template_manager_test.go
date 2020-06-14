@@ -48,8 +48,8 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 	assert.False(t, manager.GetTemplate(1, &template))
 
 	// 可以同时添加多个excel文件
-	manager.AddExcel(testExcelFilePath)
-	manager.AddExcel(testExcelFilePath2)
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
 
 	assert.True(t, manager.GetTemplate(1, &template))
 	assert.True(t, manager.GetTemplate(2, &template))
@@ -64,7 +64,7 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 
 func TestTemplateManager_GetTemplates(t *testing.T) {
 	var manager = &MetadataManager{}
-	manager.AddExcel(testExcelFilePath)
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
 	var templates []TestTemplate
 	assert.True(t, manager.GetTemplates(&templates))

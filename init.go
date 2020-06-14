@@ -14,15 +14,15 @@ Copyright (C) - All Rights Reserved
 
 var metadataManager = &MetadataManager{}
 
-func Init(log logger.ILogger) {
-	logger.Init(log)
+func Init(args InitArgs) {
+	logger.Init(args.Logger)
 
 	// 每次项目启动时，删除旧的下载文件
 	_ = os.RemoveAll(downloadDirectory)
 }
 
-func AddExcel(remotePath string) {
-	metadataManager.AddExcel(remotePath)
+func AddExcel(args ExcelArgs) {
+	metadataManager.AddExcel(args)
 }
 
 func GetTemplate(id interface{}, pTemplate interface{}) bool {

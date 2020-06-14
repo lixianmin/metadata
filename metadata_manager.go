@@ -19,31 +19,31 @@ type MetadataManager struct {
 	templateManager unsafe.Pointer
 	configManager   unsafe.Pointer
 	excelCount      int32    // 成功加载的excel文件个数，用于判断初始化完成
-	routeTable      sync.Map // 路由表，sheetName => excelFilePath
+	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
 }
 
-func (my *MetadataManager) AddExcel(remotePath string) {
-	var isUrl = strings.HasPrefix(remotePath, "http://") || strings.HasPrefix(remotePath, "https://")
+func (my *MetadataManager) AddExcel(args ExcelArgs) {
+	var isUrl = strings.HasPrefix(args.FilePath, "http://") || strings.HasPrefix(args.FilePath, "https://")
 	if isUrl {
-		var web = NewWebFile(remotePath)
+		var web = NewWebFile(args.FilePath)
 		web.Start(func(localPath string) {
-			logger.Warn("Metadata file is changed, remotePath=%q, localPath=%q", remotePath, localPath)
-			my.onAddNewExcel(localPath)
+			logger.Warn("Metadata file is changed, args=%v, localPath=%q", args, localPath)
+			my.onAddNewExcel(ExcelArgs{FilePath: localPath, TitleRowIndex: args.TitleRowIndex})
 		})
 	} else {
-		logger.Warn("Metadata file is changed, remotePath=%q", remotePath)
-		my.onAddNewExcel(remotePath)
+		logger.Warn("Metadata file is changed, args=%v", args)
+		my.onAddNewExcel(args)
 	}
 }
 
-func (my *MetadataManager) onAddNewExcel(localPath string) {
-	var sheetNames = loadSheetNames(localPath)
+func (my *MetadataManager) onAddNewExcel(args ExcelArgs) {
+	var sheetNames = loadSheetNames(args.FilePath)
 	for _, name := range sheetNames {
-		my.routeTable.Store(name, localPath)
+		my.routeTable.Store(name, args)
 	}
 
-	atomic.StorePointer(&my.templateManager, unsafe.Pointer(&TemplateManager{}))
-	atomic.StorePointer(&my.configManager, unsafe.Pointer(&ConfigManager{}))
+	atomic.StorePointer(&my.templateManager, unsafe.Pointer(newTemplateManager()))
+	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
 	atomic.AddInt32(&my.excelCount, 1)
 }
 

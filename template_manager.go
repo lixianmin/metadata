@@ -21,6 +21,14 @@ type TemplateManager struct {
 	tables sync.Map
 }
 
+func newTemplateManager() *TemplateManager {
+	var manager = &TemplateManager{
+
+	}
+
+	return manager
+}
+
 // template是一个结构体指针
 func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id interface{}, pTemplate interface{}) bool {
 	if tools.IsNil(pTemplate) {
@@ -42,13 +50,13 @@ func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id interface{}
 		return checkSetValue(templateValue, table[id])
 	}
 
-	excelFilePath, ok := routeTable.Load(templateName)
+	args, ok := routeTable.Load(templateName)
 	if !ok {
 		logger.Error("Can not find excelFilePath for templateName=%q", templateName)
 		return false
 	}
 
-	var err = manager.loadTemplateTable(excelFilePath.(string), templateType, templateName)
+	var err = manager.loadTemplateTable(args.(ExcelArgs), templateType, templateName)
 	if err != nil {
 		manager.tables.Store(templateName, make(TemplateTable))
 		return false
@@ -83,13 +91,13 @@ func (manager *TemplateManager) GetTemplates(routeTable *sync.Map, pTemplateList
 		return hasData
 	}
 
-	excelFilePath, ok := routeTable.Load(templateName)
+	args, ok := routeTable.Load(templateName)
 	if !ok {
 		logger.Error("Can not find excelFilePath for templateName=%q", templateName)
 		return false
 	}
 
-	var err = manager.loadTemplateTable(excelFilePath.(string), elemType, templateName)
+	var err = manager.loadTemplateTable(args.(ExcelArgs), elemType, templateName)
 	if err != nil {
 		manager.tables.Store(templateName, make(TemplateTable))
 		return false
@@ -109,8 +117,8 @@ func (manager *TemplateManager) getTemplateTable(templateName string) TemplateTa
 	return table.(TemplateTable)
 }
 
-func (manager *TemplateManager) loadTemplateTable(excelFilePath string, templateType reflect.Type, sheetName string) error {
-	return loadOneSheet(excelFilePath, sheetName, func(reader excel.Reader) error {
+func (manager *TemplateManager) loadTemplateTable(args ExcelArgs, templateType reflect.Type, sheetName string) error {
+	return loadOneSheet(args, sheetName, func(reader excel.Reader) error {
 		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.tables.Load(sheetName); ok {
 			return nil

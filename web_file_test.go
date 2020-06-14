@@ -8,8 +8,8 @@ import (
 
 func TestNewWebFile(t *testing.T) {
 	var manager = &MetadataManager{}
-	manager.AddExcel(testWebFileUrl)
-	manager.AddExcel(testWebFileUrl2)
+	manager.AddExcel(ExcelArgs{FilePath: testWebFileUrl})
+	manager.AddExcel(ExcelArgs{FilePath: testWebFileUrl2})
 
 	var template TestTemplate
 	var another AnotherTemplate
