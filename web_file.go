@@ -85,6 +85,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 		return logger.Dot(text)
 	}
 
+	var rawName = filepath.Base(web.url)
 	tmpFile, err := web.createTempFile()
 	if err != nil {
 		return logger.Dot(err)
@@ -110,14 +111,14 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	return nil
 }
 
-func (web *WebFile) createTempFile() (*os.File, error) {
+func (web *WebFile) createTempFile(rawName string) (*os.File, error) {
 	var err = tools.EnsureDir(downloadDirectory)
 	if err != nil {
 		return nil, err
 	}
 
 	var now = time.Now().Format("2006-01-02T15:04:05")
-	var filename = fmt.Sprintf("%d.%s.%d.xlsx", os.Getpid(), now, rand.Int31n(1029))
+	var filename = fmt.Sprintf("%d.%s.%d.%s", os.Getpid(), now, rand.Int31n(1029), rawName)
 
 	var localPath = filepath.Join(downloadDirectory, filename)
 	tmpFile, err := os.Create(localPath)
