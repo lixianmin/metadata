@@ -86,7 +86,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	}
 
 	var rawName = filepath.Base(web.url)
-	tmpFile, err := web.createTempFile()
+	tmpFile, err := web.createTempFile(rawName)
 	if err != nil {
 		return logger.Dot(err)
 	}
