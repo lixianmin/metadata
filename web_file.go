@@ -1,6 +1,7 @@
 package metadata
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/lixianmin/metadata/logger"
 	"github.com/lixianmin/metadata/tools"
@@ -67,7 +68,9 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 		return logger.Dot(err)
 	}
 
-	var client = http.Client{}
+	// 解决 x509: certificate signed by unknown authority
+	var transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	var client = http.Client{Transport: transport}
 	response, err := client.Do(request)
 	if err != nil {
 		return logger.Dot(err)
