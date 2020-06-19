@@ -27,16 +27,15 @@ func (my *MetadataManager) AddExcel(args ExcelArgs) {
 	if isUrl {
 		var web = NewWebFile(args.FilePath)
 		web.Start(func(localPath string) {
-			logger.Warn("Metadata file is changed, args=%v, localPath=%q", args, localPath)
-			my.onAddNewExcel(ExcelArgs{FilePath: localPath, TitleRowIndex: args.TitleRowIndex})
+			args.FilePath = localPath
+			my.addLocalExcel(args)
 		})
 	} else {
-		logger.Warn("Metadata file is changed, args=%v", args)
-		my.onAddNewExcel(args)
+		my.addLocalExcel(args)
 	}
 }
 
-func (my *MetadataManager) onAddNewExcel(args ExcelArgs) {
+func (my *MetadataManager) addLocalExcel(args ExcelArgs) {
 	var sheetNames = loadSheetNames(args.FilePath)
 	for _, name := range sheetNames {
 		my.routeTable.Store(name, args)
@@ -45,6 +44,11 @@ func (my *MetadataManager) onAddNewExcel(args ExcelArgs) {
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(newTemplateManager()))
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
 	atomic.AddInt32(&my.excelCount, 1)
+
+	logger.Warn("Excel file is added, args=%v", args)
+	if args.OnAdded != nil {
+		args.OnAdded(args.FilePath)
+	}
 }
 
 func (my *MetadataManager) GetTemplate(id interface{}, pTemplate interface{}) bool {

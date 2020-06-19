@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/lixianmin/metadata/logger"
-	"github.com/lixianmin/metadata/tools"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -115,7 +114,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 }
 
 func (web *WebFile) createTempFile(rawName string) (*os.File, error) {
-	var err = tools.EnsureDir(downloadDirectory)
+	var err = os.MkdirAll(downloadDirectory, 0700)
 	if err != nil {
 		return nil, err
 	}
