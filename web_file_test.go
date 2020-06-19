@@ -15,8 +15,8 @@ func TestNewWebFile(t *testing.T) {
 	var another AnotherTemplate
 
 	for i := 0; i < 8; i++ {
-		manager.GetTemplate(1, &template)
-		manager.GetTemplate(1, &another)
+		manager.GetTemplate(1, &template, "TestTemplate")
+		manager.GetTemplate(1, &another, "FakeTemplate")
 		logger.Info("template=%v, another=%v", template, another)
 
 		time.Sleep(30 * time.Second)

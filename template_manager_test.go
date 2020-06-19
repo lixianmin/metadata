@@ -45,21 +45,23 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 	var manager = &MetadataManager{}
 
 	var template TestTemplate
-	assert.False(t, manager.GetTemplate(1, &template))
+	var sheetName = "TestTemplate"
+	assert.False(t, manager.GetTemplate(1, &template, sheetName))
 
 	// 可以同时添加多个excel文件
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
 
-	assert.True(t, manager.GetTemplate(1, &template))
-	assert.True(t, manager.GetTemplate(2, &template))
-	assert.False(t, manager.GetTemplate(100, &template))
-	assert.False(t, manager.GetTemplate(100, nil))
-	assert.False(t, manager.GetTemplate(100, TestTemplate{}))
+	assert.True(t, manager.GetTemplate(1, &template, sheetName))
+	assert.True(t, manager.GetTemplate(2, &template, sheetName))
+	assert.False(t, manager.GetTemplate(100, &template, sheetName))
+	assert.False(t, manager.GetTemplate(100, nil, sheetName))
+	assert.False(t, manager.GetTemplate(100, TestTemplate{}, sheetName))
 
 	var fake FakeTemplate
-	assert.False(t, manager.GetTemplate(1, &fake))
-	assert.False(t, manager.GetTemplate(2, &fake))
+	sheetName = "FakeTemplate"
+	assert.False(t, manager.GetTemplate(1, &fake, sheetName))
+	assert.False(t, manager.GetTemplate(2, &fake, sheetName))
 }
 
 func TestTemplateManager_GetTemplates(t *testing.T) {
@@ -67,10 +69,13 @@ func TestTemplateManager_GetTemplates(t *testing.T) {
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
 	var templates []TestTemplate
-	assert.True(t, manager.GetTemplates(&templates))
-	assert.True(t, manager.GetTemplates(&templates))
+	var sheetName = "TestTemplate"
+
+	assert.True(t, manager.GetTemplates(&templates, sheetName))
+	assert.True(t, manager.GetTemplates(&templates, sheetName))
 
 	var fakes []FakeTemplate
-	assert.False(t, manager.GetTemplates(&fakes))
-	assert.False(t, manager.GetTemplates(&fakes))
+	sheetName = "FakeTemplate"
+	assert.False(t, manager.GetTemplates(&fakes, sheetName))
+	assert.False(t, manager.GetTemplates(&fakes, sheetName))
 }

@@ -25,14 +25,14 @@ func AddExcel(args ExcelArgs) {
 	metadataManager.AddExcel(args)
 }
 
-func GetTemplate(id interface{}, pTemplate interface{}) bool {
-	return metadataManager.GetTemplate(id, pTemplate)
+func GetTemplate(id interface{}, pTemplate interface{}, sheetName string) bool {
+	return metadataManager.GetTemplate(id, pTemplate, sheetName)
 }
 
-func GetTemplates(pTemplateList interface{}) bool {
-	return metadataManager.GetTemplates(pTemplateList)
+func GetTemplates(pTemplateList interface{}, sheetName string) bool {
+	return metadataManager.GetTemplates(pTemplateList, sheetName)
 }
 
-func GetConfig(pConfig interface{}) bool {
-	return metadataManager.GetTemplates(pConfig)
+func GetConfig(pConfig interface{}, sheetName string) bool {
+	return metadataManager.GetTemplates(pConfig, sheetName)
 }
