@@ -46,22 +46,23 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
-	assert.False(t, manager.GetTemplate(1, &template, sheetName))
+	assert.False(t, manager.GetTemplate(&template, Args{Id: 1, SheetName: sheetName}))
 
 	// 可以同时添加多个excel文件
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
 
-	assert.True(t, manager.GetTemplate(1, &template, sheetName))
-	assert.True(t, manager.GetTemplate(2, &template, sheetName))
-	assert.False(t, manager.GetTemplate(100, &template, sheetName))
-	assert.False(t, manager.GetTemplate(100, nil, sheetName))
-	assert.False(t, manager.GetTemplate(100, TestTemplate{}, sheetName))
+	assert.True(t, manager.GetTemplate(&template, Args{Id: 1}))
+	assert.True(t, manager.GetTemplate(&template, Args{Id: 1, SheetName: sheetName}))
+	assert.True(t, manager.GetTemplate(&template, Args{Id: 2, SheetName: sheetName}))
+	assert.False(t, manager.GetTemplate(&template, Args{Id: 100, SheetName: sheetName}))
+	assert.False(t, manager.GetTemplate(nil, Args{Id: 100, SheetName: sheetName}))
+	assert.False(t, manager.GetTemplate(TestTemplate{}, Args{Id: 100, SheetName: sheetName}))
 
 	var fake FakeTemplate
 	sheetName = "FakeTemplate"
-	assert.False(t, manager.GetTemplate(1, &fake, sheetName))
-	assert.False(t, manager.GetTemplate(2, &fake, sheetName))
+	assert.False(t, manager.GetTemplate(&fake, Args{Id: 1, SheetName: sheetName}))
+	assert.False(t, manager.GetTemplate(&fake, Args{Id: 2, SheetName: sheetName}))
 }
 
 func TestTemplateManager_GetTemplates(t *testing.T) {
@@ -71,11 +72,14 @@ func TestTemplateManager_GetTemplates(t *testing.T) {
 	var templates []TestTemplate
 	var sheetName = "TestTemplate"
 
-	assert.True(t, manager.GetTemplates(&templates, sheetName))
-	assert.True(t, manager.GetTemplates(&templates, sheetName))
+	assert.True(t, manager.GetTemplate(&templates, Args{SheetName: sheetName}))
+	assert.True(t, manager.GetTemplate(&templates, Args{Filter: func(v interface{}) bool {
+		var template = v.(TestTemplate)
+		return template.Id > 3
+	}}))
 
 	var fakes []FakeTemplate
 	sheetName = "FakeTemplate"
-	assert.False(t, manager.GetTemplates(&fakes, sheetName))
-	assert.False(t, manager.GetTemplates(&fakes, sheetName))
+	assert.False(t, manager.GetTemplate(&fakes, Args{SheetName: sheetName}))
+	assert.False(t, manager.GetTemplate(&fakes, Args{}))
 }

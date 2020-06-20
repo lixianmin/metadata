@@ -30,7 +30,7 @@ func newTemplateManager() *TemplateManager {
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id interface{}, pTemplate interface{}, sheetName string) bool {
+func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate interface{}, args Args) bool {
 	if tools.IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
@@ -44,32 +44,31 @@ func (manager *TemplateManager) GetTemplate(routeTable *sync.Map, id interface{}
 
 	var templateValue = pTemplateValue.Elem()
 	var templateType = templateValue.Type()
-	if sheetName == "" {
-		sheetName = templateType.Name()
-	}
+	args.complement(templateType)
+	var sheetName = args.SheetName
 
 	var table = manager.getTemplateTable(sheetName)
 	if table != nil {
-		return checkSetValue(templateValue, table[id])
+		return checkSetValue(templateValue, table[args.Id])
 	}
 
-	args, ok := routeTable.Load(sheetName)
+	excelArgs, ok := routeTable.Load(sheetName)
 	if !ok {
 		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName)
 		return false
 	}
 
-	var err = manager.loadTemplateTable(args.(ExcelArgs), templateType, sheetName)
+	var err = manager.loadTemplateTable(excelArgs.(ExcelArgs), templateType, sheetName)
 	if err != nil {
 		manager.tables.Store(sheetName, make(TemplateTable))
 		return false
 	}
 
 	table = manager.getTemplateTable(sheetName)
-	return checkSetValue(templateValue, table[id])
+	return checkSetValue(templateValue, table[args.Id])
 }
 
-func (manager *TemplateManager) GetTemplates(routeTable *sync.Map, pTemplateList interface{}, sheetName string) bool {
+func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args Args) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -84,33 +83,32 @@ func (manager *TemplateManager) GetTemplates(routeTable *sync.Map, pTemplateList
 
 	// 取得元素类型
 	var elemType = templateListValue.Type().Elem()
-	if sheetName == "" {
-		sheetName = elemType.Name()
-	}
+	args.complement(elemType)
 
+	var sheetName = args.SheetName
 	var table = manager.getTemplateTable(sheetName)
 	if table != nil {
 		var hasData = len(table) > 0
 		if hasData {
-			fillSliceByTable(pTemplateListValue, elemType, table)
+			fillSliceByTable(args, pTemplateListValue, elemType, table)
 		}
 		return hasData
 	}
 
-	args, ok := routeTable.Load(sheetName)
+	excelArgs, ok := routeTable.Load(sheetName)
 	if !ok {
 		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName)
 		return false
 	}
 
-	var err = manager.loadTemplateTable(args.(ExcelArgs), elemType, sheetName)
+	var err = manager.loadTemplateTable(excelArgs.(ExcelArgs), elemType, sheetName)
 	if err != nil {
 		manager.tables.Store(sheetName, make(TemplateTable))
 		return false
 	}
 
 	table = manager.getTemplateTable(sheetName)
-	fillSliceByTable(pTemplateListValue, elemType, table)
+	fillSliceByTable(args, pTemplateListValue, elemType, table)
 	return true
 }
 
@@ -144,10 +142,13 @@ func (manager *TemplateManager) loadTemplateTable(args ExcelArgs, templateType r
 	})
 }
 
-func fillSliceByTable(pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
+func fillSliceByTable(args Args, pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
 	var slice = reflect.MakeSlice(reflect.SliceOf(elemType), 0, len(table))
+	var filter = args.Filter
 	for _, item := range table {
-		slice = reflect.Append(slice, reflect.ValueOf(item))
+		if filter(item) {
+			slice = reflect.Append(slice, reflect.ValueOf(item))
+		}
 	}
 
 	pTemplateListValue.Elem().Set(slice)

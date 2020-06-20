@@ -27,7 +27,7 @@ func newConfigManager() *ConfigManager {
 	return manager
 }
 
-func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}, sheetName string) bool {
+func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}, args Args) bool {
 	if tools.IsNil(pConfig) {
 		logger.Error("pConfig is nil")
 		return false
@@ -41,22 +41,21 @@ func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{
 
 	var configValue = pConfigValue.Elem()
 	var configType = configValue.Type()
-	if sheetName == "" {
-		sheetName = configType.Name()
-	}
+	args.complement(configType)
+	var sheetName = args.SheetName
 
 	var config, ok = manager.configs.Load(sheetName)
 	if ok {
 		return checkSetValue(configValue, config)
 	}
 
-	args, ok := routeTable.Load(sheetName)
+	excelArgs, ok := routeTable.Load(sheetName)
 	if !ok {
 		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName)
 		return false
 	}
 
-	var err = manager.loadConfig(args.(ExcelArgs), configType, sheetName)
+	var err = manager.loadConfig(excelArgs.(ExcelArgs), configType, sheetName)
 	if err != nil {
 		manager.configs.Store(sheetName, nil)
 		return false
