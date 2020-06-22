@@ -27,10 +27,10 @@ func TestConfigManager_GetConfig(t *testing.T) {
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
 	var config TestConfig
-	assert.True(t, manager.GetConfig(&config, Args{}))
-	assert.True(t, manager.GetConfig(&config, Args{}))
+	assert.True(t, manager.GetConfig(&config))
+	assert.True(t, manager.GetConfig(&config, "TestConfig"))
 
 	var fake FakeConfig
-	assert.False(t, manager.GetConfig(&fake, Args{}))
-	assert.False(t, manager.GetConfig(&fake, Args{}))
+	assert.False(t, manager.GetConfig(&fake))
+	assert.False(t, manager.GetConfig(&fake, "FakeConfig"))
 }

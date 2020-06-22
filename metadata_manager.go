@@ -51,23 +51,27 @@ func (my *MetadataManager) addLocalExcel(args ExcelArgs) {
 	}
 }
 
-func (my *MetadataManager) GetTemplate(pTemplate interface{}, args Args) bool {
+func (my *MetadataManager) GetTemplate(pTemplate interface{}, id interface{}, sheetName ...string) bool {
+	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
+	if manager == nil || id == nil {
+		return false
+	}
+
+	return manager.getTemplate(&my.routeTable, pTemplate, id, sheetName...)
+}
+
+func (my *MetadataManager) GetTemplates(pTemplateList interface{}, args ...Args) bool {
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
 	if manager == nil {
 		return false
 	}
 
-	var isSingle = args.Id != nil
-	if isSingle {
-		return manager.getTemplate(&my.routeTable, pTemplate, args)
-	} else {
-		return manager.getTemplates(&my.routeTable, pTemplate, args)
-	}
+	return manager.getTemplates(&my.routeTable, pTemplateList, args...)
 }
 
-func (my *MetadataManager) GetConfig(pConfig interface{}, args Args) bool {
+func (my *MetadataManager) GetConfig(pConfig interface{}, sheetName ...string) bool {
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
-	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, args)
+	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, sheetName...)
 }
 
 func (my *MetadataManager) GetExcelCount() int {

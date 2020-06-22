@@ -14,9 +14,8 @@ var emptyFilter = func(v interface{}) bool {
 }
 
 type Args struct {
-	SheetName string                   // 如果是空字符串""，则直接按pTemplate/pConfig的类型返回
-	Filter    func(v interface{}) bool // 默认为nil，不过滤，即全部返回
-	Id        interface{}              // getTemplate()使用的id
+	SheetName string                   // 如果是空字符串""，则直接使用反射的类型
+	Filter    func(v interface{}) bool // 默认为nil，此时使用emptyFilter
 }
 
 func (args *Args) complement(metaType reflect.Type) {

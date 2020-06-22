@@ -30,7 +30,7 @@ func newTemplateManager() *TemplateManager {
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate interface{}, args Args) bool {
+func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate interface{}, id interface{}, sheetName ...string) bool {
 	if tools.IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
@@ -44,31 +44,37 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 
 	var templateValue = pTemplateValue.Elem()
 	var templateType = templateValue.Type()
-	args.complement(templateType)
-	var sheetName = args.SheetName
 
-	var table = manager.getTemplateTable(sheetName)
+	// 获取sheetName
+	var sheetName2 = ""
+	if len(sheetName) > 0 {
+		sheetName2 = sheetName[0]
+	} else {
+		sheetName2 = templateType.Name()
+	}
+
+	var table = manager.getTemplateTable(sheetName2)
 	if table != nil {
-		return checkSetValue(templateValue, table[args.Id])
+		return checkSetValue(templateValue, table[id])
 	}
 
-	excelArgs, ok := routeTable.Load(sheetName)
+	excelArgs, ok := routeTable.Load(sheetName2)
 	if !ok {
-		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName)
+		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName2)
 		return false
 	}
 
-	var err = manager.loadTemplateTable(excelArgs.(ExcelArgs), templateType, sheetName)
+	var err = manager.loadTemplateTable(excelArgs.(ExcelArgs), templateType, sheetName2)
 	if err != nil {
-		manager.tables.Store(sheetName, make(TemplateTable))
+		manager.tables.Store(sheetName2, make(TemplateTable))
 		return false
 	}
 
-	table = manager.getTemplateTable(sheetName)
-	return checkSetValue(templateValue, table[args.Id])
+	table = manager.getTemplateTable(sheetName2)
+	return checkSetValue(templateValue, table[id])
 }
 
-func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args Args) bool {
+func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args ...Args) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -83,14 +89,20 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 
 	// 取得元素类型
 	var elemType = templateListValue.Type().Elem()
-	args.complement(elemType)
 
-	var sheetName = args.SheetName
+	// 取得args
+	var args2 = Args{}
+	if len(args) > 0 {
+		args2 = args[0]
+	}
+	args2.complement(elemType)
+
+	var sheetName = args2.SheetName
 	var table = manager.getTemplateTable(sheetName)
 	if table != nil {
 		var hasData = len(table) > 0
 		if hasData {
-			fillSliceByTable(args, pTemplateListValue, elemType, table)
+			fillSliceByTable(args2, pTemplateListValue, elemType, table)
 		}
 		return hasData
 	}
@@ -108,7 +120,7 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 	}
 
 	table = manager.getTemplateTable(sheetName)
-	fillSliceByTable(args, pTemplateListValue, elemType, table)
+	fillSliceByTable(args2, pTemplateListValue, elemType, table)
 	return true
 }
 
