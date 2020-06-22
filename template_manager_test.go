@@ -42,7 +42,7 @@ type AnotherTemplate struct {
 }
 
 func TestTemplateManager_GetTemplate(t *testing.T) {
-	var manager = &MetadataManager{}
+	var manager = &Manager{}
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
@@ -66,7 +66,7 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 }
 
 func TestTemplateManager_GetTemplates(t *testing.T) {
-	var manager = &MetadataManager{}
+	var manager = &Manager{}
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
 	var templates []TestTemplate

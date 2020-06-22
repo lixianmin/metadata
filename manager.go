@@ -15,14 +15,14 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-type MetadataManager struct {
+type Manager struct {
 	templateManager unsafe.Pointer
 	configManager   unsafe.Pointer
 	excelCount      int32    // 成功加载的excel文件个数，用于判断初始化完成
 	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
 }
 
-func (my *MetadataManager) AddExcel(args ExcelArgs) {
+func (my *Manager) AddExcel(args ExcelArgs) {
 	var isUrl = strings.HasPrefix(args.FilePath, "http://") || strings.HasPrefix(args.FilePath, "https://")
 	if isUrl {
 		var web = NewWebFile(args.FilePath)
@@ -35,7 +35,7 @@ func (my *MetadataManager) AddExcel(args ExcelArgs) {
 	}
 }
 
-func (my *MetadataManager) addLocalExcel(args ExcelArgs) {
+func (my *Manager) addLocalExcel(args ExcelArgs) {
 	var sheetNames = loadSheetNames(args.FilePath)
 	for _, name := range sheetNames {
 		my.routeTable.Store(name, args)
@@ -51,7 +51,7 @@ func (my *MetadataManager) addLocalExcel(args ExcelArgs) {
 	}
 }
 
-func (my *MetadataManager) GetTemplate(pTemplate interface{}, id interface{}, sheetName ...string) bool {
+func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, sheetName ...string) bool {
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
 	if manager == nil || id == nil {
 		return false
@@ -60,7 +60,7 @@ func (my *MetadataManager) GetTemplate(pTemplate interface{}, id interface{}, sh
 	return manager.getTemplate(&my.routeTable, pTemplate, id, sheetName...)
 }
 
-func (my *MetadataManager) GetTemplates(pTemplateList interface{}, args ...Args) bool {
+func (my *Manager) GetTemplates(pTemplateList interface{}, args ...Args) bool {
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
 	if manager == nil {
 		return false
@@ -69,12 +69,12 @@ func (my *MetadataManager) GetTemplates(pTemplateList interface{}, args ...Args)
 	return manager.getTemplates(&my.routeTable, pTemplateList, args...)
 }
 
-func (my *MetadataManager) GetConfig(pConfig interface{}, sheetName ...string) bool {
+func (my *Manager) GetConfig(pConfig interface{}, sheetName ...string) bool {
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
 	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, sheetName...)
 }
 
-func (my *MetadataManager) GetExcelCount() int {
+func (my *Manager) GetExcelCount() int {
 	var count = atomic.LoadInt32(&my.excelCount)
 	return int(count)
 }

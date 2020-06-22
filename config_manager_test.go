@@ -23,7 +23,7 @@ type FakeConfig struct {
 }
 
 func TestConfigManager_GetConfig(t *testing.T) {
-	var manager = &MetadataManager{}
+	var manager = &Manager{}
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
 	var config TestConfig
