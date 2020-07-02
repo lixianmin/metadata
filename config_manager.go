@@ -27,7 +27,7 @@ func newConfigManager() *ConfigManager {
 	return manager
 }
 
-func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}, sheetName ...string) bool {
+func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}, sheetName string) bool {
 	if tools.IsNil(pConfig) {
 		logger.Error("pConfig is nil")
 		return false
@@ -43,10 +43,8 @@ func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{
 	var configType = configValue.Type()
 
 	// 获取sheetName
-	var sheetName2 = ""
-	if len(sheetName) > 0 {
-		sheetName2 = sheetName[0]
-	} else {
+	var sheetName2 = sheetName
+	if sheetName2 == "" {
 		sheetName2 = configType.Name()
 	}
 

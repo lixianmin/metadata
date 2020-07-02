@@ -30,7 +30,7 @@ func newTemplateManager() *TemplateManager {
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate interface{}, id interface{}, sheetName ...string) bool {
+func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate interface{}, id interface{}, sheetName string) bool {
 	if tools.IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
@@ -46,10 +46,8 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 	var templateType = templateValue.Type()
 
 	// 获取sheetName
-	var sheetName2 = ""
-	if len(sheetName) > 0 {
-		sheetName2 = sheetName[0]
-	} else {
+	var sheetName2 = sheetName
+	if sheetName2 == "" {
 		sheetName2 = templateType.Name()
 	}
 
@@ -74,7 +72,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 	return checkSetValue(templateValue, table[id])
 }
 
-func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args ...Args) bool {
+func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args Args) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -91,18 +89,14 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 	var elemType = templateListValue.Type().Elem()
 
 	// 取得args
-	var args2 = Args{}
-	if len(args) > 0 {
-		args2 = args[0]
-	}
-	args2.complement(elemType)
+	args.complement(elemType)
 
-	var sheetName = args2.SheetName
+	var sheetName = args.SheetName
 	var table = manager.getTemplateTable(sheetName)
 	if table != nil {
 		var hasData = len(table) > 0
 		if hasData {
-			fillSliceByTable(args2, pTemplateListValue, elemType, table)
+			fillSliceByTable(args, pTemplateListValue, elemType, table)
 		}
 		return hasData
 	}
@@ -120,7 +114,7 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 	}
 
 	table = manager.getTemplateTable(sheetName)
-	fillSliceByTable(args2, pTemplateListValue, elemType, table)
+	fillSliceByTable(args, pTemplateListValue, elemType, table)
 	return true
 }
 

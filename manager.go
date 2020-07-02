@@ -52,29 +52,54 @@ func (my *Manager) addLocalExcel(args ExcelArgs) {
 }
 
 func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, sheetName ...string) bool {
-	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
-	if manager == nil || id == nil {
-		return false
+	// 判断是否传入了sheetName
+	var sheetName2 = ""
+	if len(sheetName) > 0 {
+		sheetName2 = sheetName[0]
+		if sheetName2 != "" && !my.isSheetName(sheetName2) {
+			return false
+		}
 	}
 
-	return manager.getTemplate(&my.routeTable, pTemplate, id, sheetName...)
+	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
+	return manager != nil && id != nil && manager.getTemplate(&my.routeTable, pTemplate, id, sheetName2)
 }
 
 func (my *Manager) GetTemplates(pTemplateList interface{}, args ...Args) bool {
-	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
-	if manager == nil {
-		return false
+	// 判断是否传入了合法的sheetName
+	var args2 Args
+	if len(args) > 0 {
+		args2 = args[0]
+		if args2.SheetName != "" && !my.isSheetName(args2.SheetName) {
+			return false
+		}
 	}
 
-	return manager.getTemplates(&my.routeTable, pTemplateList, args...)
+	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
+	return manager != nil && manager.getTemplates(&my.routeTable, pTemplateList, args2)
 }
 
 func (my *Manager) GetConfig(pConfig interface{}, sheetName ...string) bool {
+	// 判断是否传入了sheetName
+	var sheetName2 = ""
+	if len(sheetName) > 0 {
+		sheetName2 = sheetName[0]
+		if sheetName2 != "" && !my.isSheetName(sheetName2) {
+			return false
+		}
+	}
+
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
-	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, sheetName...)
+	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, sheetName2)
 }
 
 func (my *Manager) GetExcelCount() int {
 	var count = atomic.LoadInt32(&my.excelCount)
 	return int(count)
+}
+
+// 用于fast fail 的判断
+func (my *Manager) isSheetName(name string) bool {
+	var _, ok = my.routeTable.Load(name)
+	return ok
 }

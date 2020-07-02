@@ -19,7 +19,7 @@ func TestNewWebFile(t *testing.T) {
 		manager.GetTemplate(&another, 1)
 		logger.Info("template=%v, another=%v", template, another)
 
-		time.Sleep(30 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 	//time.Sleep(time.Hour)
 }
