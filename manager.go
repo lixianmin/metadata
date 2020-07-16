@@ -18,24 +18,28 @@ Copyright (C) - All Rights Reserved
 type Manager struct {
 	templateManager unsafe.Pointer
 	configManager   unsafe.Pointer
-	excelCount      int32    // 成功加载的excel文件个数，用于判断初始化完成
 	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
+
+	m          sync.Mutex
+	excelFiles map[string]struct{}
+	excelCount int // 成功加载的excel文件个数，用于判断初始化完成
 }
 
 func (my *Manager) AddExcel(args ExcelArgs) {
-	var isUrl = strings.HasPrefix(args.FilePath, "http://") || strings.HasPrefix(args.FilePath, "https://")
+	var rawFilePath = args.FilePath
+	var isUrl = strings.HasPrefix(rawFilePath, "http://") || strings.HasPrefix(rawFilePath, "https://")
 	if isUrl {
-		var web = NewWebFile(args.FilePath)
+		var web = NewWebFile(rawFilePath)
 		web.Start(func(localPath string) {
 			args.FilePath = localPath
-			my.addLocalExcel(args)
+			my.addLocalExcel(rawFilePath, args)
 		})
 	} else {
-		my.addLocalExcel(args)
+		my.addLocalExcel(rawFilePath, args)
 	}
 }
 
-func (my *Manager) addLocalExcel(args ExcelArgs) {
+func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 	var sheetNames = loadSheetNames(args.FilePath)
 	for _, name := range sheetNames {
 		my.routeTable.Store(name, args)
@@ -43,12 +47,23 @@ func (my *Manager) addLocalExcel(args ExcelArgs) {
 
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(newTemplateManager()))
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
-	atomic.AddInt32(&my.excelCount, 1)
+	my.rememberExcelFiles(rawFilePath)
 
 	logger.Warn("Excel file is added, args=%v", args)
 	if args.OnAdded != nil {
 		args.OnAdded(args.FilePath)
 	}
+}
+
+func (my *Manager) rememberExcelFiles(rawFilePath string) {
+	my.m.Lock()
+	if my.excelFiles == nil {
+		my.excelFiles = make(map[string]struct{}, 4)
+	}
+
+	my.excelFiles[rawFilePath] = struct{}{}
+	my.excelCount = len(my.excelFiles)
+	my.m.Unlock()
 }
 
 func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, sheetName ...string) bool {
@@ -94,8 +109,7 @@ func (my *Manager) GetConfig(pConfig interface{}, sheetName ...string) bool {
 }
 
 func (my *Manager) GetExcelCount() int {
-	var count = atomic.LoadInt32(&my.excelCount)
-	return int(count)
+	return my.excelCount
 }
 
 // 用于fast fail 的判断
