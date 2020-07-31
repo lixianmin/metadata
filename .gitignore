@@ -3,3 +3,5 @@ logs/
 .idea/
 res/~$metadata.xlsx
 downloads/
+vendor/
+go.sum
