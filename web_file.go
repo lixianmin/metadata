@@ -114,7 +114,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 }
 
 func (web *WebFile) createTempFile(rawName string) (*os.File, error) {
-	var err = os.MkdirAll(downloadDirectory, 0700)
+	var err = os.MkdirAll(downloadDirectory, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
