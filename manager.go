@@ -49,7 +49,7 @@ func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
 	my.rememberExcelFiles(rawFilePath)
 
-	logger.Warn("Excel file is added, args=%v", args)
+	logger.Info("Excel file is added, args=%v", args)
 	if args.OnAdded != nil {
 		args.OnAdded(args.FilePath)
 	}
