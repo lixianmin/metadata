@@ -15,7 +15,7 @@ func TestNewWebFile(t *testing.T) {
 	var another AnotherTemplate
 
 	for i := 0; i < 8; i++ {
-		manager.GetTemplate(&template, 1, "TestTemplate")
+		manager.GetTemplate(&template, 1, WithSheetName("TestTemplate"))
 		manager.GetTemplate(&another, 1)
 		logger.Info("template=%v, another=%v", template, another)
 

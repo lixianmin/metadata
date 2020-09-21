@@ -66,46 +66,36 @@ func (my *Manager) rememberExcelFiles(rawFilePath string) {
 	my.m.Unlock()
 }
 
-func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, sheetName ...string) bool {
-	// 判断是否传入了sheetName
-	var sheetName2 = ""
-	if len(sheetName) > 0 {
-		sheetName2 = sheetName[0]
-		if sheetName2 != "" && !my.isSheetName(sheetName2) {
-			return false
-		}
-	}
-
+func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, opts ...Option) bool {
+	var args = my.createOptions(opts)
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
-	return manager != nil && id != nil && manager.getTemplate(&my.routeTable, pTemplate, id, sheetName2)
+	return manager != nil && id != nil && manager.getTemplate(&my.routeTable, pTemplate, id, args.SheetName)
 }
 
-func (my *Manager) GetTemplates(pTemplateList interface{}, args ...Args) bool {
-	// 判断是否传入了合法的sheetName
-	var args2 Args
-	if len(args) > 0 {
-		args2 = args[0]
-		if args2.SheetName != "" && !my.isSheetName(args2.SheetName) {
-			return false
-		}
-	}
-
+func (my *Manager) GetTemplates(pTemplateList interface{}, opts ...Option) bool {
+	var args = my.createOptions(opts)
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
-	return manager != nil && manager.getTemplates(&my.routeTable, pTemplateList, args2)
+	return manager != nil && manager.getTemplates(&my.routeTable, pTemplateList, args)
 }
 
-func (my *Manager) GetConfig(pConfig interface{}, sheetName ...string) bool {
-	// 判断是否传入了sheetName
-	var sheetName2 = ""
-	if len(sheetName) > 0 {
-		sheetName2 = sheetName[0]
-		if sheetName2 != "" && !my.isSheetName(sheetName2) {
-			return false
-		}
-	}
-
+func (my *Manager) GetConfig(pConfig interface{}, opts ...Option) bool {
+	var args = my.createOptions(opts)
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
-	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, sheetName2)
+	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, args.SheetName)
+}
+
+func (my *Manager) createOptions(opts []Option) options {
+	var args options
+	for _, opt := range opts {
+		opt(&args)
+	}
+
+	// 判断sheetName是不合法
+	if args.SheetName != "" && !my.isSheetName(args.SheetName) {
+		args.SheetName = ""
+	}
+
+	return args
 }
 
 func (my *Manager) GetExcelCount() int {

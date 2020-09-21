@@ -72,7 +72,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 	return checkSetValue(templateValue, table[id])
 }
 
-func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args Args) bool {
+func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args options) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -148,7 +148,7 @@ func (manager *TemplateManager) loadTemplateTable(args ExcelArgs, templateType r
 	})
 }
 
-func fillSliceByTable(args Args, pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
+func fillSliceByTable(args options, pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
 	var slice = reflect.MakeSlice(reflect.SliceOf(elemType), 0, len(table))
 	var filter = args.Filter
 	for _, item := range table {

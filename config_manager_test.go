@@ -28,9 +28,9 @@ func TestConfigManager_GetConfig(t *testing.T) {
 
 	var config TestConfig
 	assert.True(t, manager.GetConfig(&config))
-	assert.True(t, manager.GetConfig(&config, "TestConfig"))
+	assert.True(t, manager.GetConfig(&config, WithSheetName("TestConfig")))
 
 	var fake FakeConfig
 	assert.False(t, manager.GetConfig(&fake))
-	assert.False(t, manager.GetConfig(&fake, "FakeConfig"))
+	assert.False(t, manager.GetConfig(&fake, WithSheetName("FakeConfig")))
 }

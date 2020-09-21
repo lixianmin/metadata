@@ -46,7 +46,7 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
-	assert.False(t, manager.GetTemplate(&template, 1, sheetName))
+	assert.False(t, manager.GetTemplate(&template, 1, WithSheetName(sheetName)))
 
 	// 可以同时添加多个excel文件
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
@@ -54,14 +54,14 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 
 	assert.True(t, manager.GetTemplate(&template, 1))
 	assert.True(t, manager.GetTemplate(&template, 1))
-	assert.True(t, manager.GetTemplate(&template, 2, sheetName))
-	assert.False(t, manager.GetTemplate(&template, 100, sheetName))
+	assert.True(t, manager.GetTemplate(&template, 2, WithSheetName(sheetName)))
+	assert.False(t, manager.GetTemplate(&template, 100, WithSheetName(sheetName)))
 	assert.False(t, manager.GetTemplate(nil, 100))
-	assert.False(t, manager.GetTemplate(TestTemplate{}, 100, sheetName))
+	assert.False(t, manager.GetTemplate(TestTemplate{}, 100, WithSheetName(sheetName)))
 
 	var fake FakeTemplate
 	sheetName = "FakeTemplate"
-	assert.False(t, manager.GetTemplate(&fake, 1, sheetName))
+	assert.False(t, manager.GetTemplate(&fake, 1, WithSheetName(sheetName)))
 	assert.False(t, manager.GetTemplate(&fake, 2))
 }
 
@@ -73,14 +73,14 @@ func TestTemplateManager_GetTemplates(t *testing.T) {
 	var sheetName = "TestTemplate"
 
 	assert.True(t, manager.GetTemplates(&templates))
-	assert.True(t, manager.GetTemplates(&templates, Args{SheetName: sheetName}))
-	assert.True(t, manager.GetTemplates(&templates, Args{Filter: func(v interface{}) bool {
+	assert.True(t, manager.GetTemplates(&templates, WithSheetName(sheetName)))
+	assert.True(t, manager.GetTemplates(&templates, WithFilter(func(v interface{}) bool {
 		var template = v.(TestTemplate)
 		return template.Id > 3
-	}}))
+	})))
 
 	var fakes []FakeTemplate
 	sheetName = "FakeTemplate"
-	assert.False(t, manager.GetTemplates(&fakes, Args{SheetName: sheetName}))
+	assert.False(t, manager.GetTemplates(&fakes, WithSheetName(sheetName)))
 	assert.False(t, manager.GetTemplates(&fakes))
 }
