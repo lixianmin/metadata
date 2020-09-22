@@ -21,6 +21,7 @@ type Manager struct {
 	configManager   unsafe.Pointer
 	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
 	excelFiles      loom.Map
+	onExcelChanged  delegateString
 }
 
 func (my *Manager) AddExcel(args ExcelArgs) {
@@ -48,9 +49,11 @@ func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 	my.excelFiles.Put(rawFilePath, nil)
 
 	logger.Info("Excel file is added, args=%v", args)
-	if args.OnAdded != nil {
-		args.OnAdded(args.FilePath)
-	}
+	my.onExcelChanged.Invoke(args.FilePath)
+}
+
+func (my *Manager) OnExcelChanged(handler func(excelFilePath string)) {
+	my.onExcelChanged.Add(handler)
 }
 
 func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, opts ...Option) bool {
