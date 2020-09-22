@@ -1,6 +1,7 @@
 package metadata
 
 import (
+	"github.com/lixianmin/got/loom"
 	"github.com/lixianmin/metadata/logger"
 	"strings"
 	"sync"
@@ -19,10 +20,7 @@ type Manager struct {
 	templateManager unsafe.Pointer
 	configManager   unsafe.Pointer
 	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
-
-	m          sync.Mutex
-	excelFiles map[string]struct{}
-	excelCount int // 成功加载的excel文件个数，用于判断初始化完成
+	excelFiles      loom.Map
 }
 
 func (my *Manager) AddExcel(args ExcelArgs) {
@@ -47,23 +45,12 @@ func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(newTemplateManager()))
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
-	my.rememberExcelFiles(rawFilePath)
+	my.excelFiles.Put(rawFilePath, nil)
 
 	logger.Info("Excel file is added, args=%v", args)
 	if args.OnAdded != nil {
 		args.OnAdded(args.FilePath)
 	}
-}
-
-func (my *Manager) rememberExcelFiles(rawFilePath string) {
-	my.m.Lock()
-	if my.excelFiles == nil {
-		my.excelFiles = make(map[string]struct{}, 4)
-	}
-
-	my.excelFiles[rawFilePath] = struct{}{}
-	my.excelCount = len(my.excelFiles)
-	my.m.Unlock()
 }
 
 func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, opts ...Option) bool {
@@ -99,7 +86,7 @@ func (my *Manager) createOptions(opts []Option) options {
 }
 
 func (my *Manager) GetExcelCount() int {
-	return my.excelCount
+	return my.excelFiles.Size()
 }
 
 // 用于fast fail 的判断
