@@ -84,3 +84,26 @@ func TestTemplateManager_GetTemplates(t *testing.T) {
 	assert.False(t, manager.GetTemplates(&fakes, WithSheetName(sheetName)))
 	assert.False(t, manager.GetTemplates(&fakes))
 }
+
+func TestTemplateManager_GetTemplateByIntXX(t *testing.T) {
+	var manager = &Manager{}
+
+	var template TestTemplate
+	var sheetName = "TestTemplate"
+	assert.False(t, manager.GetTemplate(&template, 1, WithSheetName(sheetName)))
+
+	// 可以同时添加多个excel文件
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
+
+	assert.True(t, manager.GetTemplate(&template, int8(1)))
+	assert.True(t, manager.GetTemplate(&template, int16(1)))
+	assert.True(t, manager.GetTemplate(&template, int32(1)))
+	assert.True(t, manager.GetTemplate(&template, int64(1)))
+	assert.True(t, manager.GetTemplate(&template, uint8(1)))
+	assert.True(t, manager.GetTemplate(&template, uint16(1)))
+	assert.True(t, manager.GetTemplate(&template, uint32(1)))
+	assert.True(t, manager.GetTemplate(&template, uint64(1)))
+	assert.True(t, manager.GetTemplate(&template, int(1)))
+	assert.True(t, manager.GetTemplate(&template, uint(1)))
+}

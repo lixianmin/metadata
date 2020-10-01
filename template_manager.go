@@ -53,6 +53,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 
 	var table = manager.getTemplateTable(sheetName2)
 	if table != nil {
+		id = translateIdType(id)
 		return checkSetValue(templateValue, table[id])
 	}
 
@@ -69,6 +70,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 	}
 
 	table = manager.getTemplateTable(sheetName2)
+	id = translateIdType(id)
 	return checkSetValue(templateValue, table[id])
 }
 
@@ -196,6 +198,8 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 		}
 
 		var id = fieldId.Interface()
+		id = translateIdType(id)
+
 		var newItem = item.Interface()
 		var oldItem, ok = table[id]
 		if ok {
@@ -206,4 +210,30 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 	}
 
 	return table
+}
+
+// 只所以要写这个方法，是因为传入的id参数经常是各种intXX类型，但是类型不匹配的话可能取不到，因此统一成int64传入和获取
+func translateIdType(id interface{}) interface{} {
+	switch id1 := id.(type) {
+	case int:
+		return int64(id1)
+	case int8:
+		return int64(id1)
+	case int16:
+		return int64(id1)
+	case int32:
+		return int64(id1)
+	case uint8:
+		return int64(id1)
+	case uint16:
+		return int64(id1)
+	case uint32:
+		return int64(id1)
+	case uint64:
+		return int64(id1)
+	case uint:
+		return int64(id1)
+	default:
+		return id
+	}
 }
