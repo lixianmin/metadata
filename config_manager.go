@@ -27,7 +27,7 @@ func newConfigManager() *ConfigManager {
 	return manager
 }
 
-func (manager *ConfigManager) GetConfig(routeTable *sync.Map, pConfig interface{}, sheetName string) bool {
+func (manager *ConfigManager) getConfig(routeTable *sync.Map, pConfig interface{}, sheetName string) bool {
 	if tools.IsNil(pConfig) {
 		logger.Error("pConfig is nil")
 		return false

@@ -72,7 +72,7 @@ func (my *Manager) GetTemplates(pTemplateList interface{}, opts ...Option) bool 
 func (my *Manager) GetConfig(pConfig interface{}, opts ...Option) bool {
 	var args = my.createOptions(opts)
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
-	return manager != nil && manager.GetConfig(&my.routeTable, pConfig, args.SheetName)
+	return manager != nil && manager.getConfig(&my.routeTable, pConfig, args.SheetName)
 }
 
 func (my *Manager) createOptions(opts []Option) options {
