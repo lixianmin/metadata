@@ -9,9 +9,9 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-var emptyFilter = func(v interface{}) bool {
-	return true
-}
+//var emptyFilter = func(v interface{}) bool {
+//	return true
+//}
 
 type options struct {
 	SheetName string                   // 如果是空字符串""，则直接使用反射的类型
@@ -37,7 +37,7 @@ func (my *options) complement(metaType reflect.Type) {
 		my.SheetName = metaType.Name()
 	}
 
-	if my.Filter == nil {
-		my.Filter = emptyFilter
-	}
+	//if my.Filter == nil {
+	//	my.Filter = emptyFilter
+	//}
 }

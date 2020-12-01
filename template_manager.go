@@ -153,9 +153,17 @@ func (manager *TemplateManager) loadTemplateTable(args ExcelArgs, templateType r
 func fillSliceByTable(args options, pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
 	var slice = reflect.MakeSlice(reflect.SliceOf(elemType), 0, len(table))
 	var filter = args.Filter
-	for _, item := range table {
-		if filter(item) {
+	if filter == nil {
+		// if there is no filter
+		for _, item := range table {
 			slice = reflect.Append(slice, reflect.ValueOf(item))
+		}
+	} else {
+		// if there is a filter
+		for _, item := range table {
+			if filter(item) {
+				slice = reflect.Append(slice, reflect.ValueOf(item))
+			}
 		}
 	}
 
