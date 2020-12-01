@@ -62,6 +62,7 @@ func (my *Manager) GetTemplate(pTemplate interface{}, id interface{}, opts ...Op
 	return manager != nil && id != nil && manager.getTemplate(&my.routeTable, pTemplate, id, args.SheetName)
 }
 
+// 相同的参数每次返回的pTemplateList中的items的顺序是不一样的，因为遍历map是不稳定的
 func (my *Manager) GetTemplates(pTemplateList interface{}, opts ...Option) bool {
 	var args = my.createOptions(opts)
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))

@@ -155,6 +155,7 @@ func fillSliceByTable(args options, pTemplateListValue reflect.Value, elemType r
 	var filter = args.Filter
 	if filter == nil {
 		// if there is no filter
+		// the order of the slice items will be different because the iteration of map is not stable
 		for _, item := range table {
 			slice = reflect.Append(slice, reflect.ValueOf(item))
 		}
