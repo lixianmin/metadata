@@ -41,7 +41,7 @@ type AnotherTemplate struct {
 	Name string `xlsx:"名称"` // 支持中文的列名
 }
 
-func TestTemplateManager_GetTemplate(t *testing.T) {
+func TestManager_GetTemplate(t *testing.T) {
 	var manager = &Manager{}
 
 	var template TestTemplate
@@ -65,7 +65,7 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 	assert.False(t, manager.GetTemplate(&fake, 2))
 }
 
-func TestTemplateManager_GetTemplates(t *testing.T) {
+func TestManager_GetTemplates(t *testing.T) {
 	var manager = &Manager{}
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
@@ -85,7 +85,7 @@ func TestTemplateManager_GetTemplates(t *testing.T) {
 	assert.False(t, manager.GetTemplates(&fakes))
 }
 
-func TestTemplateManager_GetTemplateByIntXX(t *testing.T) {
+func TestManager_GetTemplateByIntXX(t *testing.T) {
 	var manager = &Manager{}
 
 	var template TestTemplate

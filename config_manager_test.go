@@ -22,7 +22,7 @@ type FakeConfig struct {
 	Name string `xlsx:"name"`
 }
 
-func TestConfigManager_GetConfig(t *testing.T) {
+func TestManager_GetConfig(t *testing.T) {
 	var manager = &Manager{}
 	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
 
