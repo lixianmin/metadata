@@ -19,7 +19,7 @@ type TestConfig struct {
 }
 
 type FakeConfig struct {
-	ID   int
+	Id   int
 	Name string `xlsx:"name"`
 }
 
