@@ -44,28 +44,32 @@ func (my *Manager) AddExcel(args ExcelArgs) {
 func (my *Manager) goWatchLocalExcel(rawFilePath string, args ExcelArgs) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logo.Error("err", err)
+		logo.JsonE("err", err)
 	}
 	defer watcher.Close()
 
 	err = watcher.Add(rawFilePath)
 	if err != nil {
-		logo.Error("err", err)
+		logo.JsonE("err", err)
 	}
 
 	for {
 		select {
-		case _, ok := <-watcher.Events:
+		case event, ok := <-watcher.Events:
 			if !ok {
 				return
 			}
-			my.addLocalExcel(rawFilePath, args)
+
+			if event.Op&fsnotify.Write == fsnotify.Write {
+				my.addLocalExcel(rawFilePath, args)
+			}
+			logo.JsonI("event", event)
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				return
 			}
 
-			logo.Warn("err", err)
+			logo.JsonW("err", err)
 		}
 	}
 }
