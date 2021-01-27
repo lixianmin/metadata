@@ -1,7 +1,9 @@
 package metadata
 
 import (
+	"github.com/fsnotify/fsnotify"
 	"github.com/lixianmin/got/loom"
+	"github.com/lixianmin/logo"
 	"github.com/lixianmin/metadata/logger"
 	"strings"
 	"sync"
@@ -35,6 +37,36 @@ func (my *Manager) AddExcel(args ExcelArgs) {
 		})
 	} else {
 		my.addLocalExcel(rawFilePath, args)
+		go my.goWatchLocalExcel(rawFilePath, args)
+	}
+}
+
+func (my *Manager) goWatchLocalExcel(rawFilePath string, args ExcelArgs) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logo.Error("err", err)
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(rawFilePath)
+	if err != nil {
+		logo.Error("err", err)
+	}
+
+	for {
+		select {
+		case _, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			my.addLocalExcel(rawFilePath, args)
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+
+			logo.Warn("err", err)
+		}
 	}
 }
 

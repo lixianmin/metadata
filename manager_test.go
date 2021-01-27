@@ -3,6 +3,7 @@ package metadata
 import (
 	"encoding/json"
 	"testing"
+	"time"
 )
 import "github.com/stretchr/testify/assert"
 
@@ -22,7 +23,6 @@ type FakeConfig struct {
 	Id   int
 	Name string `xlsx:"name"`
 }
-
 
 type TestPerson struct {
 	Name string
@@ -130,4 +130,12 @@ func TestManager_GetConfig(t *testing.T) {
 	var fake FakeConfig
 	assert.False(t, manager.GetConfig(&fake))
 	assert.False(t, manager.GetConfig(&fake, WithSheetName("FakeConfig")))
+}
+
+func TestManager_WatchLocalFile(t *testing.T) {
+	var manager = &Manager{}
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
+	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
+
+	time.Sleep(time.Hour)
 }
