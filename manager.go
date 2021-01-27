@@ -1,13 +1,13 @@
 package metadata
 
 import (
-	"github.com/fsnotify/fsnotify"
 	"github.com/lixianmin/got/loom"
-	"github.com/lixianmin/logo"
 	"github.com/lixianmin/metadata/logger"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unsafe"
 )
 
@@ -24,6 +24,8 @@ type Manager struct {
 	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
 	excelFiles      loom.Map
 	onExcelChanged  delegateString
+
+	watchLocalFileOnce sync.Once
 }
 
 func (my *Manager) AddExcel(args ExcelArgs) {
@@ -37,42 +39,81 @@ func (my *Manager) AddExcel(args ExcelArgs) {
 		})
 	} else {
 		my.addLocalExcel(rawFilePath, args)
-		go my.goWatchLocalExcel(rawFilePath, args)
+
+		my.watchLocalFileOnce.Do(func() {
+			loom.Go(my.goWatchLocalExcel)
+		})
 	}
 }
 
-func (my *Manager) goWatchLocalExcel(rawFilePath string, args ExcelArgs) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		logo.JsonE("err", err)
-	}
-	defer watcher.Close()
+func (my *Manager) goWatchLocalExcel(later loom.Later) {
+	var ticker = later.NewTicker(5 * time.Second)
 
-	err = watcher.Add(rawFilePath)
-	if err != nil {
-		logo.JsonE("err", err)
+	type FileInfo struct {
+		Size    int64
+		ModTime time.Time
 	}
+	var lastInfos = make(map[string]FileInfo)
 
 	for {
 		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
-				return
-			}
+		case <-ticker.C:
+			my.excelFiles.Range(func(key interface{}, value interface{}) {
+				var rawFilePath, args = key.(string), value.(ExcelArgs)
+				var info, err = os.Stat(rawFilePath)
+				if err != nil {
+					return
+				}
 
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				my.addLocalExcel(rawFilePath, args)
-			}
-			logo.JsonI("event", event)
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
-			}
+				if last, ok := lastInfos[rawFilePath]; !ok || !last.ModTime.Equal(info.ModTime()) || last.Size != info.Size() {
+					lastInfos[rawFilePath] = FileInfo{
+						Size:    info.Size(),
+						ModTime: info.ModTime(),
+					}
 
-			logo.JsonW("err", err)
+					// 如果ok，则意味着文件变了
+					if ok {
+						my.addLocalExcel(rawFilePath, args)
+					}
+				}
+			})
 		}
 	}
 }
+
+// 本来使用 github.com/fsnotify/fsnotify ，测试了三次，结果分别是：op=Remove, op=Chmod, 以及没有收到event
+//func (my *Manager) goWatchLocalExcel(rawFilePath string, args ExcelArgs) {
+//	watcher, err := fsnotify.NewWatcher()
+//	if err != nil {
+//		logo.JsonE("err", err)
+//	}
+//	defer watcher.Close()
+//
+//	err = watcher.Add(rawFilePath)
+//	if err != nil {
+//		logo.JsonE("err", err)
+//	}
+//
+//	for {
+//		select {
+//		case event, ok := <-watcher.Events:
+//			if !ok {
+//				return
+//			}
+//
+//			if event.Op&fsnotify.Write == fsnotify.Write {
+//				my.addLocalExcel(rawFilePath, args)
+//			}
+//			logo.JsonI("event", event)
+//		case err, ok := <-watcher.Errors:
+//			if !ok {
+//				return
+//			}
+//
+//			logo.JsonW("err", err)
+//		}
+//	}
+//}
 
 func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 	var sheetNames = loadSheetNames(args.FilePath)
@@ -82,7 +123,7 @@ func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(newTemplateManager()))
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
-	my.excelFiles.Put(rawFilePath, nil)
+	my.excelFiles.Put(rawFilePath, args)
 
 	logger.Info("Excel file is added, args=%v", args)
 	my.onExcelChanged.Invoke(args.FilePath)
