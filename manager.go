@@ -22,7 +22,7 @@ type Manager struct {
 	templateManager unsafe.Pointer
 	configManager   unsafe.Pointer
 	routeTable      sync.Map // 路由表，sheetName => ExcelArgs
-	excelFiles      loom.Map
+	excelFiles      sync.Map // 原来使用的是loom.Map，在Range()的时候调用了Put()，死锁了
 	onExcelChanged  delegateString
 
 	watchLocalFileOnce sync.Once
@@ -58,11 +58,11 @@ func (my *Manager) goWatchLocalExcel(later loom.Later) {
 	for {
 		select {
 		case <-ticker.C:
-			my.excelFiles.Range(func(key interface{}, value interface{}) {
+			my.excelFiles.Range(func(key, value interface{}) bool {
 				var rawFilePath, args = key.(string), value.(ExcelArgs)
 				var info, err = os.Stat(rawFilePath)
 				if err != nil {
-					return
+					return true
 				}
 
 				if last, ok := lastInfos[rawFilePath]; !ok || !last.ModTime.Equal(info.ModTime()) || last.Size != info.Size() {
@@ -76,6 +76,8 @@ func (my *Manager) goWatchLocalExcel(later loom.Later) {
 						my.addLocalExcel(rawFilePath, args)
 					}
 				}
+
+				return true
 			})
 		}
 	}
@@ -123,9 +125,9 @@ func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 
 	atomic.StorePointer(&my.templateManager, unsafe.Pointer(newTemplateManager()))
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
-	my.excelFiles.Put(rawFilePath, args)
+	my.excelFiles.Store(rawFilePath, args)
 
-	logger.Info("Excel file is added, args=%v", args)
+	logger.Info("Excel file is added, args=%v, excelCount=%d", args, my.GetExcelCount())
 	my.onExcelChanged.Invoke(args.FilePath)
 }
 
@@ -167,7 +169,13 @@ func (my *Manager) createOptions(opts []Option) options {
 }
 
 func (my *Manager) GetExcelCount() int {
-	return my.excelFiles.Size()
+	var count = 0
+	my.excelFiles.Range(func(key, value interface{}) bool {
+		count++
+		return true
+	})
+
+	return count
 }
 
 // 用于fast fail 的判断
