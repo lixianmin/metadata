@@ -25,15 +25,15 @@ func GetLogger() logo.ILogger {
 	return theLogger
 }
 
-func Info(first interface{}, args ...interface{}) {
+func Info(first string, args ...interface{}) {
 	theLogger.Info(first, args...)
 }
 
-func Warn(first interface{}, args ...interface{}) {
+func Warn(first string, args ...interface{}) {
 	theLogger.Warn(first, args...)
 }
 
-func Error(first interface{}, args ...interface{}) {
+func Error(first string, args ...interface{}) {
 	theLogger.Error(first, args...)
 }
 
@@ -42,7 +42,7 @@ func Dot(err interface{}) error {
 		switch err := err.(type) {
 		case string:
 			var v = errors.New(err)
-			theLogger.Error(v)
+			theLogger.Error(err)
 			return v
 		case error:
 			if err != nil && err != sql.ErrTxDone && err != sql.ErrNoRows {

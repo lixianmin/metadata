@@ -58,7 +58,7 @@ func (web *WebFile) buildRequest() (*http.Request, error) {
 func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error(r)
+			logger.Error("%v", r)
 		}
 	}()
 

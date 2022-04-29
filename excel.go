@@ -23,7 +23,7 @@ func loadSheetNames(excelFilePath string) []string {
 	conn := excel.NewConnecter()
 	err := conn.Open(excelFilePath)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err.Error())
 		return nil
 	}
 
@@ -56,7 +56,7 @@ func loadOneSheet(args ExcelArgs, sheetName string, handler func(reader excel.Re
 		TitleRowIndex: args.TitleRowIndex,
 		Skip:          args.Skip,
 	})
-	
+
 	if err != nil {
 		return logger.Dot(err)
 	}
