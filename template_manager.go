@@ -22,9 +22,7 @@ type TemplateManager struct {
 }
 
 func newTemplateManager() *TemplateManager {
-	var manager = &TemplateManager{
-
-	}
+	var manager = &TemplateManager{}
 
 	return manager
 }

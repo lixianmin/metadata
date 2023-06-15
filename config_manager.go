@@ -20,9 +20,7 @@ type ConfigManager struct {
 }
 
 func newConfigManager() *ConfigManager {
-	var manager = &ConfigManager{
-
-	}
+	var manager = &ConfigManager{}
 
 	return manager
 }
