@@ -15,7 +15,7 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-type TemplateTable map[interface{}]interface{}
+type TemplateTable map[any]any
 
 type TemplateManager struct {
 	tables sync.Map
@@ -28,7 +28,7 @@ func newTemplateManager() *TemplateManager {
 }
 
 // template是一个结构体指针
-func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate interface{}, id interface{}, sheetName string) bool {
+func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate any, id any, sheetName string) bool {
 	if tools.IsNil(pTemplate) {
 		logger.Error("pTemplate is nil")
 		return false
@@ -72,7 +72,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate inte
 	return checkSetValue(templateValue, table[id])
 }
 
-func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList interface{}, args options) bool {
+func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList any, args options) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -169,7 +169,7 @@ func fillSliceByTable(args options, pTemplateListValue reflect.Value, elemType r
 	pTemplateListValue.Elem().Set(slice)
 }
 
-func checkSetValue(v reflect.Value, i interface{}) bool {
+func checkSetValue(v reflect.Value, i any) bool {
 	if i != nil {
 		v.Set(reflect.ValueOf(i))
 		return true
@@ -220,7 +220,7 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 }
 
 // 只所以要写这个方法，是因为传入的id参数经常是各种intXX类型，但是类型不匹配的话可能取不到，因此统一成int64传入和获取
-func translateIdType(id interface{}) interface{} {
+func translateIdType(id any) any {
 	switch id1 := id.(type) {
 	case int:
 		return int64(id1)

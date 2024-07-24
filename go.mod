@@ -1,11 +1,13 @@
 module github.com/lixianmin/metadata
 
-go 1.17
+go 1.21
+
+toolchain go1.22.2
 
 require (
-	github.com/lixianmin/got v0.0.0-20230610020739-8dcd39bc1d9d
-	github.com/lixianmin/logo v0.0.0-20220519032357-f73455888a56
-	github.com/stretchr/testify v1.8.4
+	github.com/lixianmin/got v0.0.0-20240723074651-796f967cd5a8
+	github.com/lixianmin/logo v0.0.0-20240710025343-95c41a339972
+	github.com/stretchr/testify v1.9.0
 	github.com/szyhf/go-excel v1.5.3
 )
 
