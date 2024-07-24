@@ -13,7 +13,7 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
  *********************************************************************/
 
-var theLogger logo.ILogger = logo.GetLogger()
+var theLogger = logo.GetLogger()
 
 func Init(log logo.ILogger) {
 	if log != nil {
@@ -25,19 +25,19 @@ func GetLogger() logo.ILogger {
 	return theLogger
 }
 
-func Info(first string, args ...interface{}) {
+func Info(first string, args ...any) {
 	theLogger.Info(first, args...)
 }
 
-func Warn(first string, args ...interface{}) {
+func Warn(first string, args ...any) {
 	theLogger.Warn(first, args...)
 }
 
-func Error(first string, args ...interface{}) {
+func Error(first string, args ...any) {
 	theLogger.Error(first, args...)
 }
 
-func Dot(err interface{}) error {
+func Dot(err any) error {
 	if err != nil {
 		switch err := err.(type) {
 		case string:
@@ -45,7 +45,7 @@ func Dot(err interface{}) error {
 			theLogger.Error(err)
 			return v
 		case error:
-			if err != nil && err != sql.ErrTxDone && err != sql.ErrNoRows {
+			if err != nil && !errors.Is(err, sql.ErrTxDone) && !errors.Is(err, sql.ErrNoRows) {
 				theLogger.Error("err=%q", err)
 			}
 			return err

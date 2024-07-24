@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/lixianmin/metadata/logger"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -95,7 +95,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 
 	defer tmpFile.Close()
 
-	buffer, err := ioutil.ReadAll(response.Body)
+	buffer, err := io.ReadAll(response.Body)
 	if err != nil {
 		return logger.Dot(err)
 	}

@@ -28,17 +28,25 @@ type Manager struct {
 	watchLocalFileOnce sync.Once
 }
 
-func (my *Manager) AddExcel(args ExcelArgs) {
-	var rawFilePath = args.FilePath
+func (my *Manager) AddExcel(opts ...ExcelOption) {
+	// 默认值
+	var options = excelOptions{}
+
+	// 初始化
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	var rawFilePath = options.Uri
 	var isUrl = strings.HasPrefix(rawFilePath, "http://") || strings.HasPrefix(rawFilePath, "https://")
 	if isUrl {
 		var web = NewWebFile(rawFilePath)
 		web.Start(func(localPath string) {
-			args.FilePath = localPath
-			my.addLocalExcel(rawFilePath, args)
+			options.Uri = localPath
+			my.addLocalExcel(rawFilePath, options)
 		})
 	} else {
-		my.addLocalExcel(rawFilePath, args)
+		my.addLocalExcel(rawFilePath, options)
 
 		my.watchLocalFileOnce.Do(func() {
 			loom.Go(my.goWatchLocalExcel)
@@ -59,7 +67,7 @@ func (my *Manager) goWatchLocalExcel(later loom.Later) {
 		select {
 		case <-ticker.C:
 			my.excelFiles.Range(func(key, value interface{}) bool {
-				var rawFilePath, args = key.(string), value.(ExcelArgs)
+				var rawFilePath, args = key.(string), value.(excelOptions)
 				var info, err = os.Stat(rawFilePath)
 				if err != nil {
 					return true
@@ -83,8 +91,8 @@ func (my *Manager) goWatchLocalExcel(later loom.Later) {
 	}
 }
 
-func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
-	var sheetNames = loadSheetNames(args.FilePath)
+func (my *Manager) addLocalExcel(rawFilePath string, args excelOptions) {
+	var sheetNames = loadSheetNames(args.Uri)
 	for _, name := range sheetNames {
 		my.routeTable.Store(name, args)
 	}
@@ -94,34 +102,34 @@ func (my *Manager) addLocalExcel(rawFilePath string, args ExcelArgs) {
 	my.excelFiles.Store(rawFilePath, args)
 
 	logger.Info("Excel file is added, args=%v, excelCount=%d", args, my.GetExcelCount())
-	my.onExcelChanged.Invoke(args.FilePath)
+	my.onExcelChanged.Invoke(args.Uri)
 }
 
 func (my *Manager) OnExcelChanged(handler func(excelFilePath string)) {
 	my.onExcelChanged.Add(handler)
 }
 
-func (my *Manager) GetTemplate(pTemplate any, id any, opts ...Option) bool {
-	var args = my.createOptions(opts)
+func (my *Manager) GetTemplate(pTemplate any, id any, opts ...LoadOption) bool {
+	var options = my.createLoadOptions(opts)
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
-	return manager != nil && id != nil && manager.getTemplate(&my.routeTable, pTemplate, id, args.SheetName)
+	return manager != nil && id != nil && manager.getTemplate(&my.routeTable, pTemplate, id, options.SheetName)
 }
 
 // GetTemplates 相同的参数每次返回的pTemplateList中的items的不保证顺序：这个是跟实现相关的，目前遍历基于map是不稳定的
-func (my *Manager) GetTemplates(pTemplateList any, opts ...Option) bool {
-	var args = my.createOptions(opts)
+func (my *Manager) GetTemplates(pTemplateList any, opts ...LoadOption) bool {
+	var options = my.createLoadOptions(opts)
 	var manager = (*TemplateManager)(atomic.LoadPointer(&my.templateManager))
-	return manager != nil && manager.getTemplates(&my.routeTable, pTemplateList, args)
+	return manager != nil && manager.getTemplates(&my.routeTable, pTemplateList, options)
 }
 
-func (my *Manager) GetConfig(pConfig any, opts ...Option) bool {
-	var args = my.createOptions(opts)
+func (my *Manager) GetConfig(pConfig any, opts ...LoadOption) bool {
+	var args = my.createLoadOptions(opts)
 	var manager = (*ConfigManager)(atomic.LoadPointer(&my.configManager))
 	return manager != nil && manager.getConfig(&my.routeTable, pConfig, args.SheetName)
 }
 
-func (my *Manager) createOptions(opts []Option) options {
-	var args options
+func (my *Manager) createLoadOptions(opts []LoadOption) loadOptions {
+	var args loadOptions
 	for _, opt := range opts {
 		opt(&args)
 	}

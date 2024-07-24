@@ -33,19 +33,19 @@ func loadSheetNames(excelFilePath string) []string {
 	return sheetNames
 }
 
-func loadOneSheet(args ExcelArgs, sheetName string, handler func(reader excel.Reader) error) error {
+func loadOneSheet(options excelOptions, sheetName string, handler func(reader excel.Reader) error) error {
 	excelLock.Lock()
 	defer excelLock.Unlock()
 
 	conn := excel.NewConnecter()
-	err := conn.Open(args.FilePath)
+	err := conn.Open(options.Uri)
 	if err != nil {
 		return logger.Dot(err)
 	}
 
 	defer conn.Close()
 
-	// Generate an new reader of a sheet
+	// Generate a new reader of a sheet
 	// sheetNamer: if sheetNamer is string, will use sheet as sheet sheetName.
 	//             if sheetNamer is int, will i'th sheet in the workbook, be careful the hidden sheet is counted. i ∈ [1,+inf]
 	//             if sheetNamer is a object implements `GetXLSXSheetName()string`, the return value will be used.
@@ -53,8 +53,8 @@ func loadOneSheet(args ExcelArgs, sheetName string, handler func(reader excel.Re
 	// 			   if sheetNamer is a slice, the type of element will be used to infer like before.
 	reader, err := conn.NewReaderByConfig(&excel.Config{
 		Sheet:         sheetName,
-		TitleRowIndex: args.TitleRowIndex,
-		Skip:          args.Skip,
+		TitleRowIndex: options.TitleRowIndex,
+		Skip:          options.Skip,
 	})
 
 	if err != nil {

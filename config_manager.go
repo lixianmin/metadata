@@ -51,13 +51,13 @@ func (manager *ConfigManager) getConfig(routeTable *sync.Map, pConfig interface{
 		return checkSetValue(configValue, config)
 	}
 
-	excelArgs, ok := routeTable.Load(sheetName2)
+	option, ok := routeTable.Load(sheetName2)
 	if !ok {
 		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName2)
 		return false
 	}
 
-	var err = manager.loadConfig(excelArgs.(ExcelArgs), configType, sheetName2)
+	var err = manager.loadConfig(option.(excelOptions), configType, sheetName2)
 	if err != nil {
 		manager.configs.Store(sheetName2, nil)
 		return false
@@ -67,8 +67,8 @@ func (manager *ConfigManager) getConfig(routeTable *sync.Map, pConfig interface{
 	return checkSetValue(configValue, config)
 }
 
-func (manager *ConfigManager) loadConfig(args ExcelArgs, configType reflect.Type, sheetName string) error {
-	return loadOneSheet(args, sheetName, func(reader excel.Reader) error {
+func (manager *ConfigManager) loadConfig(options excelOptions, configType reflect.Type, sheetName string) error {
+	return loadOneSheet(options, sheetName, func(reader excel.Reader) error {
 		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.configs.Load(sheetName); ok {
 			return nil

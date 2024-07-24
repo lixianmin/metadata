@@ -57,42 +57,42 @@ func TestManager_GetTemplate(t *testing.T) {
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
-	assert.False(t, manager.GetTemplate(&template, 1, WithSheetName(sheetName)))
+	assert.False(t, manager.GetTemplate(&template, 1, WithSheet(sheetName)))
 
 	// 可以同时添加多个excel文件
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
+	manager.AddExcel(WithFile(testExcelFilePath))
+	manager.AddExcel(WithFile(testExcelFilePath2))
 
 	assert.True(t, manager.GetTemplate(&template, 1))
 	assert.True(t, manager.GetTemplate(&template, 1))
-	assert.True(t, manager.GetTemplate(&template, 2, WithSheetName(sheetName)))
-	assert.False(t, manager.GetTemplate(&template, 100, WithSheetName(sheetName)))
+	assert.True(t, manager.GetTemplate(&template, 2, WithSheet(sheetName)))
+	assert.False(t, manager.GetTemplate(&template, 100, WithSheet(sheetName)))
 	assert.False(t, manager.GetTemplate(nil, 100))
-	assert.False(t, manager.GetTemplate(TestTemplate{}, 100, WithSheetName(sheetName)))
+	assert.False(t, manager.GetTemplate(TestTemplate{}, 100, WithSheet(sheetName)))
 
 	var fake FakeTemplate
 	sheetName = "FakeTemplate"
-	assert.False(t, manager.GetTemplate(&fake, 1, WithSheetName(sheetName)))
+	assert.False(t, manager.GetTemplate(&fake, 1, WithSheet(sheetName)))
 	assert.False(t, manager.GetTemplate(&fake, 2))
 }
 
 func TestManager_GetTemplates(t *testing.T) {
 	var manager = &Manager{}
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
+	manager.AddExcel(WithFile(testExcelFilePath))
 
 	var templates []TestTemplate
 	var sheetName = "TestTemplate"
 
 	assert.True(t, manager.GetTemplates(&templates))
-	assert.True(t, manager.GetTemplates(&templates, WithSheetName(sheetName)))
-	assert.True(t, manager.GetTemplates(&templates, WithFilter(func(v interface{}) bool {
+	assert.True(t, manager.GetTemplates(&templates, WithSheet(sheetName)))
+	assert.True(t, manager.GetTemplates(&templates, WithFilter(func(v any) bool {
 		var template = v.(TestTemplate)
 		return template.Id > 3
 	})))
 
 	var fakes []FakeTemplate
 	sheetName = "FakeTemplate"
-	assert.False(t, manager.GetTemplates(&fakes, WithSheetName(sheetName)))
+	assert.False(t, manager.GetTemplates(&fakes, WithSheet(sheetName)))
 	assert.False(t, manager.GetTemplates(&fakes))
 }
 
@@ -101,11 +101,11 @@ func TestManager_GetTemplateByIntXX(t *testing.T) {
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
-	assert.False(t, manager.GetTemplate(&template, 1, WithSheetName(sheetName)))
+	assert.False(t, manager.GetTemplate(&template, 1, WithSheet(sheetName)))
 
 	// 可以同时添加多个excel文件
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
+	manager.AddExcel(WithFile(testExcelFilePath))
+	manager.AddExcel(WithFile(testExcelFilePath2))
 
 	assert.True(t, manager.GetTemplate(&template, int8(1)))
 	assert.True(t, manager.GetTemplate(&template, int16(1)))
@@ -121,21 +121,21 @@ func TestManager_GetTemplateByIntXX(t *testing.T) {
 
 func TestManager_GetConfig(t *testing.T) {
 	var manager = &Manager{}
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
+	manager.AddExcel(WithFile(testExcelFilePath))
 
 	var config TestConfig
 	assert.True(t, manager.GetConfig(&config))
-	assert.True(t, manager.GetConfig(&config, WithSheetName("TestConfig")))
+	assert.True(t, manager.GetConfig(&config, WithSheet("TestConfig")))
 
 	var fake FakeConfig
 	assert.False(t, manager.GetConfig(&fake))
-	assert.False(t, manager.GetConfig(&fake, WithSheetName("FakeConfig")))
+	assert.False(t, manager.GetConfig(&fake, WithSheet("FakeConfig")))
 }
 
 func TestManager_WatchLocalFile(t *testing.T) {
 	var manager = &Manager{}
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath})
-	manager.AddExcel(ExcelArgs{FilePath: testExcelFilePath2})
+	manager.AddExcel(WithFile(testExcelFilePath))
+	manager.AddExcel(WithFile(testExcelFilePath2))
 
 	time.Sleep(time.Hour)
 }

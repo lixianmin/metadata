@@ -61,7 +61,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate any,
 		return false
 	}
 
-	var err = manager.loadTemplateTable(excelArgs.(ExcelArgs), templateType, sheetName2)
+	var err = manager.loadTemplateTable(excelArgs.(excelOptions), templateType, sheetName2)
 	if err != nil {
 		manager.tables.Store(sheetName2, make(TemplateTable))
 		return false
@@ -72,7 +72,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate any,
 	return checkSetValue(templateValue, table[id])
 }
 
-func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList any, args options) bool {
+func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList any, options loadOptions) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
 		logger.Error("pTemplateList should be a pointer")
@@ -89,14 +89,14 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 	var elemType = templateListValue.Type().Elem()
 
 	// 取得args
-	args.complement(elemType)
+	options.complement(elemType)
 
-	var sheetName = args.SheetName
+	var sheetName = options.SheetName
 	var table = manager.getTemplateTable(sheetName)
 	if table != nil {
 		var hasData = len(table) > 0
 		if hasData {
-			fillSliceByTable(args, pTemplateListValue, elemType, table)
+			fillSliceByTable(options, pTemplateListValue, elemType, table)
 		}
 		return hasData
 	}
@@ -107,14 +107,14 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 		return false
 	}
 
-	var err = manager.loadTemplateTable(excelArgs.(ExcelArgs), elemType, sheetName)
+	var err = manager.loadTemplateTable(excelArgs.(excelOptions), elemType, sheetName)
 	if err != nil {
 		manager.tables.Store(sheetName, make(TemplateTable))
 		return false
 	}
 
 	table = manager.getTemplateTable(sheetName)
-	fillSliceByTable(args, pTemplateListValue, elemType, table)
+	fillSliceByTable(options, pTemplateListValue, elemType, table)
 	return true
 }
 
@@ -127,7 +127,7 @@ func (manager *TemplateManager) getTemplateTable(sheetName string) TemplateTable
 	return table.(TemplateTable)
 }
 
-func (manager *TemplateManager) loadTemplateTable(args ExcelArgs, templateType reflect.Type, sheetName string) error {
+func (manager *TemplateManager) loadTemplateTable(args excelOptions, templateType reflect.Type, sheetName string) error {
 	return loadOneSheet(args, sheetName, func(reader excel.Reader) error {
 		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.tables.Load(sheetName); ok {
@@ -148,9 +148,9 @@ func (manager *TemplateManager) loadTemplateTable(args ExcelArgs, templateType r
 	})
 }
 
-func fillSliceByTable(args options, pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
+func fillSliceByTable(options loadOptions, pTemplateListValue reflect.Value, elemType reflect.Type, table TemplateTable) {
 	var slice = reflect.MakeSlice(reflect.SliceOf(elemType), 0, len(table))
-	var filter = args.Filter
+	var filter = options.Filter
 	if filter == nil {
 		// if there is no filter
 		// the order of the slice items will be different because the iteration of map is not stable
