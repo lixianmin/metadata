@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"github.com/lixianmin/got/loom"
+	"github.com/lixianmin/logo"
 	"github.com/lixianmin/metadata/logger"
 	"os"
 	"strings"
@@ -26,6 +27,26 @@ type Manager struct {
 	onExcelChanged  delegateString
 
 	watchLocalFileOnce sync.Once
+}
+
+func NewManager(opts ...ManagerOption) *Manager {
+	// 默认值
+	var options = managerOptions{
+		Logger: logo.GetLogger(),
+	}
+
+	// 初始化
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	logger.Init(options.Logger)
+
+	// 每次项目启动时，删除旧的下载文件
+	_ = os.RemoveAll(downloadDirectory)
+
+	var my = &Manager{}
+	return my
 }
 
 func (my *Manager) AddExcel(opts ...ExcelOption) {

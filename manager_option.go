@@ -9,14 +9,14 @@ author:     lixianmin
 Copyright (C) - All Rights Reserved
 *********************************************************************/
 
-type initOptions struct {
+type managerOptions struct {
 	Logger logo.ILogger // 自定义日志对象，默认只输出到控制台
 }
 
-type InitOption func(*initOptions)
+type ManagerOption func(*managerOptions)
 
-func WithLogger(logger logo.ILogger) InitOption {
-	return func(opt *initOptions) {
+func WithLogger(logger logo.ILogger) ManagerOption {
+	return func(opt *managerOptions) {
 		opt.Logger = logger
 	}
 }

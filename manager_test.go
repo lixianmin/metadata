@@ -53,7 +53,7 @@ type AnotherTemplate struct {
 }
 
 func TestManager_GetTemplate(t *testing.T) {
-	var manager = &Manager{}
+	var manager = NewManager()
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
@@ -77,7 +77,7 @@ func TestManager_GetTemplate(t *testing.T) {
 }
 
 func TestManager_GetTemplates(t *testing.T) {
-	var manager = &Manager{}
+	var manager = NewManager()
 	manager.AddExcel(WithFile(testExcelFilePath))
 
 	var templates []TestTemplate
@@ -97,7 +97,7 @@ func TestManager_GetTemplates(t *testing.T) {
 }
 
 func TestManager_GetTemplateByIntXX(t *testing.T) {
-	var manager = &Manager{}
+	var manager = NewManager()
 
 	var template TestTemplate
 	var sheetName = "TestTemplate"
@@ -120,7 +120,7 @@ func TestManager_GetTemplateByIntXX(t *testing.T) {
 }
 
 func TestManager_GetConfig(t *testing.T) {
-	var manager = &Manager{}
+	var manager = NewManager()
 	manager.AddExcel(WithFile(testExcelFilePath))
 
 	var config TestConfig
@@ -133,7 +133,7 @@ func TestManager_GetConfig(t *testing.T) {
 }
 
 func TestManager_WatchLocalFile(t *testing.T) {
-	var manager = &Manager{}
+	var manager = NewManager()
 	manager.AddExcel(WithFile(testExcelFilePath))
 	manager.AddExcel(WithFile(testExcelFilePath2))
 
