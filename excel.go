@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/logo"
 	"github.com/szyhf/go-excel"
 	"sync"
 )
@@ -23,7 +23,7 @@ func loadSheetNames(excelFilePath string) []string {
 	conn := excel.NewConnecter()
 	err := conn.Open(excelFilePath)
 	if err != nil {
-		logger.Error(err.Error())
+		logo.JsonW("excelFilePath", excelFilePath, "err", err)
 		return nil
 	}
 
@@ -40,7 +40,8 @@ func loadOneSheet(options excelOptions, sheetName string, handler func(reader ex
 	conn := excel.NewConnecter()
 	err := conn.Open(options.Uri)
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("uri", options.Uri, "err", err)
+		return err
 	}
 
 	defer conn.Close()
@@ -58,9 +59,10 @@ func loadOneSheet(options excelOptions, sheetName string, handler func(reader ex
 	})
 
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("uri", options.Uri, "err", err)
+		return err
 	}
-	defer reader.Close()
 
+	defer reader.Close()
 	return handler(reader)
 }

@@ -3,7 +3,7 @@ package metadata
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/logo"
 	"io"
 	"math/rand"
 	"net/http"
@@ -58,13 +58,14 @@ func (web *WebFile) buildRequest() (*http.Request, error) {
 func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("%v", r)
+			logo.Error("%v", r)
 		}
 	}()
 
 	var request, err = web.buildRequest()
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("err", err)
+		return err
 	}
 
 	// 解决 x509: certificate signed by unknown authority
@@ -72,7 +73,8 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	var client = http.Client{Transport: transport}
 	response, err := client.Do(request)
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("err", err)
+		return err
 	}
 
 	// 如果未修改，则直接返回
@@ -83,26 +85,30 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 
 	var isOk = response.StatusCode == http.StatusOK
 	if !isOk {
-		var text = fmt.Sprintf("response.StatusCode=%v, url=%q", response.StatusCode, web.url)
-		return logger.Dot(text)
+		var err2 = fmt.Errorf("response.StatusCode=%v, url=%q", response.StatusCode, web.url)
+		logo.Warn(err2.Error())
+		return err2
 	}
 
 	var rawName = filepath.Base(web.url)
 	tmpFile, err := web.createTempFile(rawName)
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("rawName", rawName, "err", err)
+		return err
 	}
 
 	defer tmpFile.Close()
 
 	buffer, err := io.ReadAll(response.Body)
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("err", err)
+		return err
 	}
 
 	_, err = tmpFile.Write(buffer)
 	if err != nil {
-		return logger.Dot(err)
+		logo.JsonW("err", err)
+		return err
 	}
 
 	web.lastETag = response.Header.Get("Etag")

@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/logo"
 	"github.com/lixianmin/metadata/tools"
 	"github.com/szyhf/go-excel"
 	"reflect"
@@ -30,13 +30,13 @@ func newTemplateManager() *TemplateManager {
 // template是一个结构体指针
 func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate any, id any, sheetName string) bool {
 	if tools.IsNil(pTemplate) {
-		logger.Error("pTemplate is nil")
+		logo.Error("pTemplate is nil")
 		return false
 	}
 
 	var pTemplateValue = reflect.ValueOf(pTemplate)
 	if pTemplateValue.Kind() != reflect.Ptr {
-		logger.Error("pTemplate should be of type *Template")
+		logo.Error("pTemplate should be of type *Template")
 		return false
 	}
 
@@ -57,7 +57,7 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate any,
 
 	excelArgs, ok := routeTable.Load(sheetName2)
 	if !ok {
-		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName2)
+		logo.Error("Can not find excelFilePath for sheetName=%q", sheetName2)
 		return false
 	}
 
@@ -75,13 +75,13 @@ func (manager *TemplateManager) getTemplate(routeTable *sync.Map, pTemplate any,
 func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList any, options loadOptions) bool {
 	var pTemplateListValue = reflect.ValueOf(pTemplateList)
 	if pTemplateListValue.Kind() != reflect.Ptr {
-		logger.Error("pTemplateList should be a pointer")
+		logo.Error("pTemplateList should be a pointer")
 		return false
 	}
 
 	var templateListValue = pTemplateListValue.Elem()
 	if templateListValue.Kind() != reflect.Slice {
-		logger.Error("pTemplateList should be a pointer of slice")
+		logo.Error("pTemplateList should be a pointer of slice")
 		return false
 	}
 
@@ -103,7 +103,7 @@ func (manager *TemplateManager) getTemplates(routeTable *sync.Map, pTemplateList
 
 	excelArgs, ok := routeTable.Load(sheetName)
 	if !ok {
-		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName)
+		logo.Error("Can not find excelFilePath for sheetName=%q", sheetName)
 		return false
 	}
 
@@ -127,8 +127,8 @@ func (manager *TemplateManager) getTemplateTable(sheetName string) TemplateTable
 	return table.(TemplateTable)
 }
 
-func (manager *TemplateManager) loadTemplateTable(args excelOptions, templateType reflect.Type, sheetName string) error {
-	return loadOneSheet(args, sheetName, func(reader excel.Reader) error {
+func (manager *TemplateManager) loadTemplateTable(options excelOptions, templateType reflect.Type, sheetName string) error {
+	return loadOneSheet(options, sheetName, func(reader excel.Reader) error {
 		// double check，如果已经被其它协程加载过了，则不再重复加载
 		if _, ok := manager.tables.Load(sheetName); ok {
 			return nil
@@ -137,7 +137,8 @@ func (manager *TemplateManager) loadTemplateTable(args excelOptions, templateTyp
 		var pSlice = makeSlice(templateType)
 		var err = reader.ReadAll(pSlice.Interface())
 		if err != nil {
-			return logger.Dot(err)
+			logo.JsonW("sheet", sheetName, "err", err)
+			return err
 		}
 
 		// 原始的slice因为是一个struct，所以不能直接用，只能从pSlice.Elem()重新获取一个
@@ -200,7 +201,7 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 		})
 
 		if !fieldId.IsValid() {
-			logger.Error("You must define an \"Id\" field in template struct.")
+			logo.Error("You must define an \"Id\" field in template struct.")
 			continue
 		}
 
@@ -210,7 +211,7 @@ func fillTemplateTable(slice reflect.Value) TemplateTable {
 		var newItem = item.Interface()
 		var oldItem, ok = table[id]
 		if ok {
-			logger.Error("Found duplicate templates: id=%d, oldItem=%v, newItem=%v", id, oldItem, newItem)
+			logo.Error("Found duplicate templates: id=%d, oldItem=%v, newItem=%v", id, oldItem, newItem)
 		}
 
 		table[id] = newItem

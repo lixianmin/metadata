@@ -3,7 +3,6 @@ package metadata
 import (
 	"github.com/lixianmin/got/loom"
 	"github.com/lixianmin/logo"
-	"github.com/lixianmin/metadata/logger"
 	"os"
 	"strings"
 	"sync"
@@ -29,19 +28,7 @@ type Manager struct {
 	watchLocalFileOnce sync.Once
 }
 
-func NewManager(opts ...ManagerOption) *Manager {
-	// 默认值
-	var options = managerOptions{
-		Logger: logo.GetLogger(),
-	}
-
-	// 初始化
-	for _, opt := range opts {
-		opt(&options)
-	}
-
-	logger.Init(options.Logger)
-
+func NewManager() *Manager {
 	// 每次项目启动时，删除旧的下载文件
 	_ = os.RemoveAll(downloadDirectory)
 
@@ -122,7 +109,7 @@ func (my *Manager) addLocalExcel(rawFilePath string, args excelOptions) {
 	atomic.StorePointer(&my.configManager, unsafe.Pointer(newConfigManager()))
 	my.excelFiles.Store(rawFilePath, args)
 
-	logger.Info("Excel file is added, args=%v, excelCount=%d", args, my.GetExcelCount())
+	logo.Info("Excel file is added, args=%v, excelCount=%d", args, my.GetExcelCount())
 	my.onExcelChanged.Invoke(args.Uri)
 }
 

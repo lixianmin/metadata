@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/logo"
 	"sync"
 )
 
@@ -42,7 +42,7 @@ func (my *delegateString) Invoke(arg string) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Info("[Invoke()] panic: r=%v", r)
+			logo.Info("[Invoke()] panic: r=%v", r)
 		}
 	}()
 

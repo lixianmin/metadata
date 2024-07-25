@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/logo"
 	"testing"
 	"time"
 )
@@ -17,7 +17,7 @@ func TestNewWebFile(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		manager.GetTemplate(&template, 1, WithSheet("TestTemplate"))
 		manager.GetTemplate(&another, 1)
-		logger.Info("template=%v, another=%v", template, another)
+		logo.JsonI("template", template, "another", another)
 
 		time.Sleep(2 * time.Second)
 	}

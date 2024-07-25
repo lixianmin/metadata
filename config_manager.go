@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"github.com/lixianmin/metadata/logger"
+	"github.com/lixianmin/logo"
 	"github.com/lixianmin/metadata/tools"
 	"github.com/szyhf/go-excel"
 	"reflect"
@@ -25,15 +25,15 @@ func newConfigManager() *ConfigManager {
 	return manager
 }
 
-func (manager *ConfigManager) getConfig(routeTable *sync.Map, pConfig interface{}, sheetName string) bool {
+func (manager *ConfigManager) getConfig(routeTable *sync.Map, pConfig any, sheetName string) bool {
 	if tools.IsNil(pConfig) {
-		logger.Error("pConfig is nil")
+		logo.Error("pConfig is nil")
 		return false
 	}
 
 	var pConfigValue = reflect.ValueOf(pConfig)
 	if pConfigValue.Kind() != reflect.Ptr {
-		logger.Error("pConfig should be of type *Config")
+		logo.Error("pConfig should be of type *Config")
 		return false
 	}
 
@@ -53,7 +53,7 @@ func (manager *ConfigManager) getConfig(routeTable *sync.Map, pConfig interface{
 
 	option, ok := routeTable.Load(sheetName2)
 	if !ok {
-		logger.Error("Can not find excelFilePath for sheetName=%q", sheetName2)
+		logo.Error("Can not find excelFilePath for sheetName=%q", sheetName2)
 		return false
 	}
 
@@ -78,7 +78,8 @@ func (manager *ConfigManager) loadConfig(options excelOptions, configType reflec
 		var pConfig = pConfigValue.Interface()
 		var err = reader.Read(pConfig)
 		if err != nil {
-			return logger.Dot(err)
+			logo.JsonW("sheet", sheetName, "err", err)
+			return err
 		}
 
 		var config = pConfigValue.Elem().Interface()
