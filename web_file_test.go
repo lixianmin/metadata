@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewWebFile(t *testing.T) {
-	var manager = &Manager{}
+	var manager = NewManager()
 	manager.AddExcel(WithFile(testWebFileUrl))
 	manager.AddExcel(WithFile(testWebFileUrl2))
 

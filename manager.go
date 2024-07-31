@@ -25,6 +25,7 @@ type Manager struct {
 	excelFiles      sync.Map // 原来使用的是loom.Map，在Range()的时候调用了Put()，死锁了
 	onExcelChanged  delegateString
 
+	webFileManager     *WebFileManager
 	watchLocalFileOnce sync.Once
 }
 
@@ -32,7 +33,10 @@ func NewManager() *Manager {
 	// 每次项目启动时，删除旧的下载文件
 	_ = os.RemoveAll(downloadDirectory)
 
-	var my = &Manager{}
+	var my = &Manager{
+		webFileManager: newWebFileManager(),
+	}
+
 	return my
 }
 
@@ -48,9 +52,8 @@ func (my *Manager) AddExcel(opts ...ExcelOption) {
 	var rawFilePath = options.Uri
 	var isUrl = strings.HasPrefix(rawFilePath, "http://") || strings.HasPrefix(rawFilePath, "https://")
 	if isUrl {
-		var web = NewWebFile(rawFilePath)
-		web.Start(func(localPath string) {
-			options.Uri = localPath
+		my.webFileManager.AddFile(rawFilePath, func(downloadPath string) {
+			options.Uri = downloadPath
 			my.addLocalExcel(rawFilePath, options)
 		})
 	} else {

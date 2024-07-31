@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lixianmin/logo"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,42 +19,22 @@ Copyright (C) - All Rights Reserved
 *********************************************************************/
 
 type WebFile struct {
-	url      string
-	lastETag string
-	lastDate string
+	url           string
+	lastETag      string
+	lastDate      string
+	onFileChanged func(downloadPath string)
 }
 
-func NewWebFile(url string) *WebFile {
-	var web = &WebFile{url: url}
+func newWebFile(url string, onFileChanged func(downloadPath string)) *WebFile {
+	var web = &WebFile{
+		url:           url,
+		onFileChanged: onFileChanged,
+	}
+
 	return web
 }
 
-func (web *WebFile) Start(onFileChanged func(localPath string)) {
-	if onFileChanged == nil {
-		panic("onFileChanged should not be nil")
-	}
-
-	go func() {
-		for {
-			_ = web.checkDownload(onFileChanged)
-			time.Sleep(time.Minute)
-		}
-	}()
-}
-
-func (web *WebFile) buildRequest() (*http.Request, error) {
-	req, err := http.NewRequest("GET", web.url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("If-None-Match", web.lastETag)
-	req.Header.Add("If-Modified-Since", web.lastDate)
-	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36")
-	return req, err
-}
-
-func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
+func (web *WebFile) CheckDownload() error {
 	defer func() {
 		if r := recover(); r != nil {
 			logo.Error("%v", r)
@@ -86,7 +65,7 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	var isOk = response.StatusCode == http.StatusOK
 	if !isOk {
 		var err2 = fmt.Errorf("response.StatusCode=%v, url=%q", response.StatusCode, web.url)
-		logo.Warn(err2.Error())
+		logo.JsonW("err2", err2)
 		return err2
 	}
 
@@ -115,8 +94,21 @@ func (web *WebFile) checkDownload(onFileChanged func(localPath string)) error {
 	web.lastDate = response.Header.Get("Date")
 
 	var filepath = tmpFile.Name()
-	onFileChanged(filepath)
+	web.onFileChanged(filepath)
+
 	return nil
+}
+
+func (web *WebFile) buildRequest() (*http.Request, error) {
+	req, err := http.NewRequest("GET", web.url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("If-None-Match", web.lastETag)
+	req.Header.Add("If-Modified-Since", web.lastDate)
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36")
+	return req, err
 }
 
 func (web *WebFile) createTempFile(rawName string) (*os.File, error) {
@@ -125,8 +117,11 @@ func (web *WebFile) createTempFile(rawName string) (*os.File, error) {
 		return nil, err
 	}
 
-	var now = time.Now().Format("2006-01-02T15:04:05")
-	var filename = fmt.Sprintf("%d.%s.%d.%s", os.Getpid(), now, rand.Int31n(1029), rawName)
+	var now = time.Now()
+	var ext = filepath.Ext(rawName)
+	var name = rawName[0 : len(rawName)-len(ext)]
+
+	var filename = fmt.Sprintf("%s.%d%s", name, now.UnixMilli(), ext)
 
 	var localPath = filepath.Join(downloadDirectory, filename)
 	tmpFile, err := os.Create(localPath)
