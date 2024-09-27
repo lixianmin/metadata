@@ -1,14 +1,15 @@
 package metadata
 
 import (
-	"crypto/tls"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
-	"github.com/lixianmin/logo"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
+
+	"github.com/lixianmin/logo"
 )
 
 /********************************************************************
@@ -19,14 +20,17 @@ Copyright (C) - All Rights Reserved
 *********************************************************************/
 
 type WebFile struct {
+	httpClient *http.Client
+
 	url           string
 	lastETag      string
 	lastDate      string
 	onFileChanged func(downloadPath string)
 }
 
-func newWebFile(url string, onFileChanged func(downloadPath string)) *WebFile {
+func newWebFile(httpClient *http.Client, url string, onFileChanged func(downloadPath string)) *WebFile {
 	var web = &WebFile{
+		httpClient:    httpClient,
 		url:           url,
 		onFileChanged: onFileChanged,
 	}
@@ -47,10 +51,7 @@ func (web *WebFile) CheckDownload() error {
 		return err
 	}
 
-	// 解决 x509: certificate signed by unknown authority
-	var transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	var client = http.Client{Transport: transport}
-	response, err := client.Do(request)
+	response, err := web.httpClient.Do(request)
 	if err != nil {
 		logo.JsonW("err", err)
 		return err
@@ -69,20 +70,24 @@ func (web *WebFile) CheckDownload() error {
 		return err2
 	}
 
+	buffer, err := io.ReadAll(response.Body)
+	if err != nil {
+		logo.JsonW("err", err)
+		return err
+	}
+
+	// 计算内容的 MD5 哈希值
+	hash := md5.Sum(buffer)
+	md5String := hex.EncodeToString(hash[:])
+
 	var rawName = filepath.Base(web.url)
-	tmpFile, err := web.createTempFile(rawName)
+	tmpFile, err := web.createTempFile(rawName, md5String)
 	if err != nil {
 		logo.JsonW("rawName", rawName, "err", err)
 		return err
 	}
 
 	defer tmpFile.Close()
-
-	buffer, err := io.ReadAll(response.Body)
-	if err != nil {
-		logo.JsonW("err", err)
-		return err
-	}
 
 	_, err = tmpFile.Write(buffer)
 	if err != nil {
@@ -111,17 +116,16 @@ func (web *WebFile) buildRequest() (*http.Request, error) {
 	return req, err
 }
 
-func (web *WebFile) createTempFile(rawName string) (*os.File, error) {
+func (web *WebFile) createTempFile(rawName string, md5String string) (*os.File, error) {
 	var err = os.MkdirAll(downloadDirectory, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
 
-	var now = time.Now()
 	var ext = filepath.Ext(rawName)
 	var name = rawName[0 : len(rawName)-len(ext)]
 
-	var filename = fmt.Sprintf("%s.%d%s", name, now.UnixMilli(), ext)
+	var filename = fmt.Sprintf("%s.%s%s", name, md5String, ext)
 
 	var localPath = filepath.Join(downloadDirectory, filename)
 	tmpFile, err := os.Create(localPath)

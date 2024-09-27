@@ -1,8 +1,9 @@
 package metadata
 
 import (
-	"github.com/lixianmin/logo"
 	"sync"
+
+	"github.com/lixianmin/logo"
 )
 
 /********************************************************************
@@ -35,9 +36,7 @@ func (my *delegateString) Invoke(arg string) {
 	// 单独clone一份出来，因为callback的方法体调用了哪些内容未知，防止循环调用导致死循环
 	my.lock.Lock()
 	var cloned = make([]handlerFunc, len(my.handlers))
-	for i, handler := range my.handlers {
-		cloned[i] = handler
-	}
+	copy(cloned, my.handlers)
 	my.lock.Unlock()
 
 	defer func() {

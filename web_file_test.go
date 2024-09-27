@@ -1,10 +1,16 @@
 package metadata
 
 import (
-	"github.com/lixianmin/logo"
 	"testing"
 	"time"
+
+	"github.com/lixianmin/logo"
 )
+
+const testExcelFilePath = "res/metadata.xlsx"
+const testExcelFilePath2 = "res/metadata2.xlsx"
+const testWebFileUrl = "https://github.com/lixianmin/metadata/raw/master/res/metadata.xlsx"
+const testWebFileUrl2 = "https://github.com/lixianmin/metadata/raw/master/res/metadata2.xlsx"
 
 func TestNewWebFile(t *testing.T) {
 	var manager = NewManager()
