@@ -25,6 +25,7 @@ type WebFile struct {
 	url           string
 	lastETag      string
 	lastDate      string
+	lastMd5       string
 	onFileChanged func(downloadPath string)
 }
 
@@ -80,6 +81,11 @@ func (web *WebFile) CheckDownload() error {
 	hash := md5.Sum(buffer)
 	md5String := hex.EncodeToString(hash[:])
 
+	// 检查新的 MD5 是否与上次下载的文件相同
+	if md5String == web.lastMd5 {
+		return nil // 文件内容未变化,直接返回
+	}
+
 	var rawName = filepath.Base(web.url)
 	tmpFile, err := web.createTempFile(rawName, md5String)
 	if err != nil {
@@ -97,6 +103,7 @@ func (web *WebFile) CheckDownload() error {
 
 	web.lastETag = response.Header.Get("Etag")
 	web.lastDate = response.Header.Get("Date")
+	web.lastMd5 = md5String // 更新最后一次下载的文件 MD5
 
 	var filepath = tmpFile.Name()
 	web.onFileChanged(filepath)

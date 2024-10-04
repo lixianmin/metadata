@@ -1,11 +1,12 @@
 package metadata
 
 import (
+	"reflect"
+	"sync"
+
 	"github.com/lixianmin/logo"
 	"github.com/lixianmin/metadata/tools"
 	"github.com/szyhf/go-excel"
-	"reflect"
-	"sync"
 )
 
 /********************************************************************
